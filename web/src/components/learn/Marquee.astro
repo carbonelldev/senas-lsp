@@ -1,0 +1,17 @@
+---
+import { LETRAS } from "../../data/letras";
+const fila = (k: 1 | 2) => LETRAS.map((l) => ({ letra: l.letra, src: `/ejemplos/${l.letra}_${k}.jpg` }));
+const filas = [fila(1), fila(2).reverse()];
+---
+<div aria-hidden="true" class="space-y-3 overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_12%,#000_88%,transparent)]">
+  {filas.map((f, i) => (
+    <div class:list={["flex w-max gap-3 animate-marquee", i === 1 && "[animation-direction:reverse]"]}>
+      {[...f, ...f].map((it) => (
+        <figure class="relative size-[88px] shrink-0 overflow-hidden rounded-xl border border-line bg-panel grayscale-[35%] transition-[filter,transform] duration-500 hover:scale-[1.04] hover:grayscale-0 sm:size-24">
+          <img src={it.src} alt="" width="100" height="100" loading="lazy" decoding="async" class="h-full w-full object-cover" />
+          <figcaption class="label-mono absolute right-1.5 bottom-1.5 rounded-md bg-black/60 px-1.5 py-1 text-fg">{it.letra}</figcaption>
+        </figure>
+      ))}
+    </div>
+  ))}
+</div>

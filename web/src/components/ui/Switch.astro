@@ -1,0 +1,18 @@
+---
+// Interruptor (reemplaza al checkbox nativo). El <input> sigue existiendo pero oculto,
+// asi que .checked, el teclado (espacio) y los data-* funcionan igual que antes.
+import type { HTMLAttributes } from "astro/types";
+
+interface Props extends HTMLAttributes<"input"> {
+  label: string;
+}
+const { label, class: cls, ...rest } = Astro.props;
+---
+<label class:list={["inline-flex cursor-pointer select-none items-center gap-2.5 text-[13px] text-muted transition-colors duration-300 has-[:checked]:text-fg", cls]}>
+  <input type="checkbox" class="peer sr-only" {...rest} />
+  <span
+    aria-hidden="true"
+    class="relative h-5 w-9 shrink-0 rounded-full border border-line-2 bg-panel-2 transition-[background-color,border-color,box-shadow] duration-300 peer-checked:border-transparent peer-checked:bg-accent peer-checked:shadow-[0_0_14px_-3px_var(--color-accent)] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent after:absolute after:top-[3px] after:left-[3px] after:size-3 after:rounded-full after:bg-muted after:transition-[translate,background-color] after:duration-300 after:ease-spring peer-checked:after:translate-x-4 peer-checked:after:bg-white"
+  ></span>
+  <span>{label}</span>
+</label>

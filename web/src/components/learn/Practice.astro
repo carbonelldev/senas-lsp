@@ -1,0 +1,81 @@
+---
+import Stage from "../detector/Stage.astro";
+import Eyebrow from "../ui/Eyebrow.astro";
+import Button from "../ui/Button.astro";
+import Meter from "../ui/Meter.astro";
+import Switch from "../ui/Switch.astro";
+import { LETRAS } from "../../data/letras";
+---
+<section id="practica" data-practice class="grid scroll-mt-20 gap-4 lg:grid-cols-[1.25fr_1fr]">
+  <div class="reveal">
+    <Stage>
+      <Fragment slot="acciones">
+        <Button variant="primary" data-start disabled>Encender cámara</Button>
+      </Fragment>
+      <div data-success class="success absolute inset-0 z-30 grid place-items-center bg-ok/10 backdrop-blur-[2px]">
+        <div class="flex flex-col items-center gap-2">
+          <svg class="size-16 text-ok" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="24" cy="24" r="20" class="ring" />
+            <path d="m15 25 6 6 12-13" class="tick" />
+          </svg>
+          <span class="text-2xl font-semibold tracking-tight">¡Eso es!</span>
+        </div>
+      </div>
+    </Stage>
+  </div>
+
+  <div class="panel spot reveal flex flex-col gap-4 p-5" style="--i: 1">
+    <div class="flex items-center justify-between">
+      <Eyebrow>Objetivo</Eyebrow>
+      <span data-pos class="label-mono tabular">1 / {LETRAS.length}</span>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <span data-target class="inline-block w-[1.1em] text-center text-[88px] font-semibold leading-none tracking-tighter">A</span>
+      <div class="grid flex-1 grid-cols-3 gap-2">
+        <img data-img1 src="/ejemplos/A_1.jpg" alt="Ejemplo de la letra" width="100" height="100" class="aspect-square w-full rounded-lg border border-line object-cover" />
+        <img data-img2 src="/ejemplos/A_2.jpg" alt="Otro ejemplo de la letra" width="100" height="100" class="aspect-square w-full rounded-lg border border-line object-cover" />
+        <canvas data-target-skel class="aspect-square w-full rounded-lg border border-line bg-black/40"></canvas>
+      </div>
+    </div>
+
+    <p data-how class="text-[15px] leading-relaxed text-fg"></p>
+    <p data-ojo class="hidden border-l-2 border-warn/70 pl-3 text-[13px] leading-relaxed text-muted"></p>
+
+    <div class="space-y-2">
+      <div class="flex items-center justify-between text-[13px]">
+        <span data-fb class="text-muted">Enciende la cámara para practicar</span>
+        <strong data-fb-pct class="tabular text-fg"></strong>
+      </div>
+      <Meter tone="ok" data-fb-bar />
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <Button size="sm" data-prev>← Anterior</Button>
+      <Button size="sm" data-next>Siguiente →</Button>
+      <Switch data-shuffle label="al azar" class="ml-auto" />
+    </div>
+
+    <div class="mt-auto space-y-3 border-t border-line pt-4">
+      <div class="label-mono flex items-center justify-between">
+        <span>aprendidas</span>
+        <strong data-learned class="tabular text-fg">0 / {LETRAS.length}</strong>
+      </div>
+      <div class="grid grid-cols-8 gap-1 sm:grid-cols-12">
+        {LETRAS.map((l) => (
+          <button data-chip={l.letra} class="chip h-7 rounded-md border border-line bg-panel-2 text-[12px] font-semibold text-dim transition-[background-color,color,border-color,box-shadow] duration-300" data-tip={`Practicar la ${l.letra}`}>{l.letra}</button>
+        ))}
+      </div>
+      <button data-reset class="text-[12.5px] text-dim underline-offset-2 hover:text-muted hover:underline">Empezar de cero</button>
+    </div>
+  </div>
+</section>
+
+<style>
+  .chip[data-done] { background: color-mix(in oklab, var(--color-ok) 18%, var(--color-panel-2)); color: var(--color-ok); border-color: color-mix(in oklab, var(--color-ok) 40%, transparent); }
+  .chip[data-current] { color: var(--color-fg); border-color: var(--color-accent); box-shadow: 0 0 0 1px var(--color-accent), 0 0 18px -4px var(--color-accent); }
+  .success { opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+  .success[data-on] { opacity: 1; }
+  .success[data-on] .ring { animation: var(--animate-pop); transform-origin: center; }
+  .success[data-on] .tick { stroke-dasharray: 60; animation: var(--animate-draw); }
+</style>

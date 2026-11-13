@@ -1,0 +1,41 @@
+---
+// Desplegable estilizado que reemplaza a <select>. La lógica (abrir, teclado,
+// cambiar opciones) está en lib/ui/select.ts; los estilos de las opciones en global.css.
+interface Props {
+  name: string;
+  options?: { value: string; label: string }[];
+  value?: string;
+  label?: string;
+  class?: string;
+}
+const { name, options = [], value, label, class: cls } = Astro.props;
+const id = `select-${name}`;
+const actual = options.find((o) => o.value === value) ?? options[0];
+---
+<div data-select={name} class:list={["relative inline-block font-sans normal-case tracking-normal", cls]}>
+  <button
+    type="button"
+    data-select-trigger
+    role="combobox"
+    aria-haspopup="listbox"
+    aria-expanded="false"
+    aria-controls={id}
+    aria-label={label}
+    class="group/sel inline-flex h-8 max-w-[240px] items-center gap-2 rounded-full border border-line-2 bg-panel pr-2 pl-3 text-[13px] font-medium text-fg transition-colors duration-300 hover:border-dim aria-expanded:border-dim"
+  >
+    <span data-select-label class="truncate">{actual?.label ?? ""}</span>
+    <svg class="size-3.5 shrink-0 text-dim transition-transform duration-300 ease-out-expo group-aria-expanded/sel:rotate-180" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg>
+  </button>
+  <ul
+    id={id}
+    role="listbox"
+    tabindex="-1"
+    data-select-list
+    hidden
+    class="absolute top-[calc(100%+6px)] left-0 z-50 w-max min-w-full max-w-[300px] origin-top -translate-y-1 scale-95 rounded-xl border border-line-2 bg-panel p-1 opacity-0 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.9)] outline-none transition-[opacity,transform] duration-200 ease-out-expo data-open:translate-y-0 data-open:scale-100 data-open:opacity-100 data-[side=top]:top-auto data-[side=top]:bottom-[calc(100%+6px)] data-[side=top]:origin-bottom"
+  >
+    {options.map((o, i) => (
+      <li id={`${id}-${i}`} role="option" data-value={o.value} aria-selected={o.value === actual?.value ? "true" : "false"}>{o.label}</li>
+    ))}
+  </ul>
+</div>

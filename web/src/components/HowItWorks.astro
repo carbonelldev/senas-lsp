@@ -1,0 +1,113 @@
+---
+import Eyebrow from "./ui/Eyebrow.astro";
+import modelo from "../../public/model/puntos.json";
+
+const pct = (v: number) => Math.round(v * 100);
+const stats = [
+  { v: modelo.metrics.cv10 * 100, dec: 1, sufijo: " %", label: "validación cruzada", nota: "10 particiones, mismas fotos" },
+  { v: modelo.metrics.newBackground * 100, dec: 0, sufijo: " %", label: "con un fondo nuevo", nota: "entrena en uno, prueba en el otro" },
+  { v: modelo.classes.length, dec: 0, sufijo: "", label: "letras", nota: "sin J, Ñ ni Z (van con movimiento)" },
+  { v: modelo.metrics.detected * 100, dec: 0, sufijo: " %", label: "manos detectadas", nota: "de las 1920 fotos del dataset" },
+];
+const nombres: Record<string, string> = {
+  "Logistic Regression": "Regresión logística",
+  SVM: "SVM",
+  "Neural Network": "Red neuronal",
+  kNN: "k vecinos (kNN)",
+};
+const modelos = Object.entries(modelo.all as Record<string, number[]>).sort((a, b) => b[1][1] - a[1][1]);
+---
+<section id="como-funciona" class="mt-20 space-y-8 sm:mt-28">
+  <div class="reveal max-w-2xl space-y-3">
+    <Eyebrow>Cómo funciona</Eyebrow>
+    <h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">Tres pasos, cero servidores.</h2>
+    <p class="text-[15px] leading-relaxed text-muted">
+      El vídeo no se envía a ningún sitio. Cada fotograma pasa por un detector de manos y un clasificador pequeño que corren en tu propio navegador.
+    </p>
+  </div>
+
+  <ol class="grid gap-4 md:grid-cols-3">
+    <li class="panel spot reveal flex flex-col gap-4 p-5" style="--i: 0">
+      <div class="flex items-center justify-between">
+        <span class="label-mono">01 · cámara</span>
+        <svg class="size-4 text-dim" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1.5" y="3.5" width="9" height="9" rx="2" /><path d="m10.5 7 4-2v6l-4-2" /></svg>
+      </div>
+      <div class="inset-panel relative aspect-video overflow-hidden">
+        <div class="dots-bg absolute inset-0 opacity-50"></div>
+        <div class="corners absolute inset-6 rounded-sm"><span class="corner"></span></div>
+        <div class="absolute inset-x-6 h-px bg-linear-to-r from-transparent via-accent-2 to-transparent animate-scan"></div>
+        <span class="label-mono absolute top-3 left-3 flex items-center gap-1.5 text-muted"><i class="size-1.5 rounded-full bg-bad animate-blink"></i>30 fps</span>
+        <span class="label-mono absolute right-3 bottom-3 text-dim">1280×720</span>
+      </div>
+      <h3 class="font-medium">Un fotograma, unos 30 por segundo</h3>
+      <p class="text-[14px] leading-relaxed text-muted">Se lee la cámara con <code class="font-mono text-[12.5px] text-fg">getUserMedia</code>. Nada se graba ni se sube.</p>
+    </li>
+
+    <li class="panel spot reveal flex flex-col gap-4 p-5" style="--i: 1">
+      <div class="flex items-center justify-between">
+        <span class="label-mono">02 · 21 puntos</span>
+        <span class="label-mono text-accent">mediapipe</span>
+      </div>
+      <div class="inset-panel relative aspect-video overflow-hidden">
+        <canvas data-skeleton="B" class="absolute inset-0 h-full w-full"></canvas>
+      </div>
+      <h3 class="font-medium">De píxeles a esqueleto</h3>
+      <p class="text-[14px] leading-relaxed text-muted">Hand Landmarker encuentra la mano y da 21 puntos en 3D. Se normalizan: muñeca en el origen, palma = 1.</p>
+    </li>
+
+    <li class="panel spot reveal flex flex-col gap-4 p-5" style="--i: 2">
+      <div class="flex items-center justify-between">
+        <span class="label-mono">03 · letra</span>
+        <span class="label-mono text-accent-2">softmax</span>
+      </div>
+      <div class="inset-panel flex aspect-video items-end gap-1 px-4 pb-3">
+        {[8, 14, 92, 10, 22, 6, 30, 12, 18, 9, 26, 7].map((h, i) => (
+          <i class:list={["flex-1 rounded-t-[2px]", i === 2 ? "bg-linear-to-t from-accent to-accent-2" : "bg-line-2"]} style={`height:${h}%`}></i>
+        ))}
+      </div>
+      <h3 class="font-medium">Regresión logística</h3>
+      <p class="text-[14px] leading-relaxed text-muted">70 números (coordenadas y distancias entre puntas) → 24 probabilidades. La misma receta que ganó en Orange.</p>
+    </li>
+  </ol>
+
+  <div class="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
+    <dl class="grid grid-cols-2 gap-px overflow-hidden rounded-card border border-line bg-line">
+      {stats.map((s, i) => (
+        <div class="reveal flex flex-col gap-1 bg-panel p-5" style={`--i: ${i}`}>
+          <dt class="label-mono">{s.label}</dt>
+          <dd class="text-3xl font-medium tracking-tight tabular sm:text-4xl" data-count={s.v} data-decimals={s.dec} data-suffix={s.sufijo}>0</dd>
+          <dd class="text-[12.5px] text-dim">{s.nota}</dd>
+        </div>
+      ))}
+    </dl>
+
+    <div class="panel reveal p-5" style="--i: 2">
+      <div class="mb-4 flex items-center justify-between">
+        <Eyebrow>Comparativa</Eyebrow>
+        <span class="label-mono">entrenado {modelo.trained}</span>
+      </div>
+      <table class="w-full text-sm">
+        <thead class="label-mono">
+          <tr class="border-b border-line"><th class="pb-2 text-left font-normal">modelo</th><th class="pb-2 text-right font-normal">cv10</th><th class="pb-2 text-right font-normal">fondo nuevo</th></tr>
+        </thead>
+        <tbody class="tabular">
+          {modelos.map(([nombre, [cv, bg]]) => (
+            <tr class:list={["border-b border-line/60 last:border-0", nombre === modelo.model ? "text-fg" : "text-muted"]}>
+              <td class="py-2.5">
+                {nombres[nombre] ?? nombre}{nombre === modelo.model && <span class="label-mono ml-2 text-accent">en uso</span>}
+              </td>
+              <td class="py-2.5 text-right">{pct(cv)} %</td>
+              <td class="py-2.5 text-right">{pct(bg)} %</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="mt-4 text-[12.5px] leading-relaxed text-dim">
+        Las cuatro empatan en "fondo nuevo", que es la prueba que se parece a usar otra cámara. La regresión logística es la más simple, así que es la que corre aquí.
+      </p>
+      <a href="/proyecto" class="mt-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-fg underline decoration-line-2 underline-offset-4 transition-colors hover:decoration-fg">
+        Memoria completa: dataset, método, matriz de confusión <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </div>
+</section>

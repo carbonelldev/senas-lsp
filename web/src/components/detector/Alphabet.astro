@@ -1,0 +1,25 @@
+---
+import Eyebrow from "../ui/Eyebrow.astro";
+import { LETRAS } from "../../data/letras";
+---
+<section data-alphabet class="panel p-5">
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+    <Eyebrow>Alfabeto · 24 letras</Eyebrow>
+    <p class="text-[13px] text-muted">La J, la Ñ y la Z se hacen con movimiento, así que el modelo no las ve.</p>
+  </div>
+  <div class="relative grid grid-cols-6 gap-1.5 sm:grid-cols-8 lg:grid-cols-12">
+    <span data-indicator class="pointer-events-none absolute top-0 left-0 z-0 rounded-lg bg-fg opacity-0 shadow-[0_0_30px_-6px_rgba(255,255,255,0.7)] transition-[transform,width,height,opacity] duration-500 ease-spring"></span>
+    {LETRAS.map((l) => (
+      <a
+        href={`/aprender#letra-${l.letra}`}
+        data-cell={l.letra}
+        data-tip={`Cómo se hace la ${l.letra}`}
+        class="cell relative z-10 grid h-10 place-items-center rounded-lg border border-line bg-panel-2 text-[15px] font-medium text-muted transition-[color,border-color,background-color] duration-300 hover:border-line-2 hover:text-fg"
+      >{l.letra}</a>
+    ))}
+  </div>
+</section>
+
+<style>
+  .cell[data-on] { color: var(--color-bg); border-color: transparent; background: transparent; }
+</style>

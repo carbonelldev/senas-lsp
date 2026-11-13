@@ -1,0 +1,66 @@
+---
+// Tabla por letra con barras finas: acierto en validacion cruzada y con fondo nuevo.
+import Eyebrow from "../ui/Eyebrow.astro";
+import ev from "../../../public/model/evaluacion.json";
+
+const pct = (v: number) => `${Math.round(v * 100)} %`;
+const filas = [...ev.porLetra].sort((a, b) => b.fondoNuevo - a.fondoNuevo);
+const mejores = filas.slice(0, 3).map((f) => f.letra).join(", ");
+const peores = [...filas].slice(-3).reverse().map((f) => f.letra).join(", ");
+---
+<section class="panel reveal p-5">
+  <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+    <div class="space-y-1">
+      <Eyebrow>Acierto por letra</Eyebrow>
+      <p class="text-[13px] text-muted">Ordenadas por la prueba difícil (fondo nuevo). Mejores: {mejores}. Peores: {peores}.</p>
+    </div>
+    <span class="label-mono">F1 medio {(ev.macroF1 * 100).toFixed(1).replace(".", ",")} %</span>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[560px] text-[13px]">
+      <thead class="label-mono">
+        <tr class="border-b border-line">
+          <th class="pb-2 text-left font-normal">letra</th>
+          <th class="pb-2 text-left font-normal">validación cruzada</th>
+          <th class="pb-2 text-left font-normal">fondo nuevo</th>
+          <th class="pb-2 text-left font-normal">precisión</th>
+          <th class="pb-2 text-left font-normal">se confunde con</th>
+        </tr>
+      </thead>
+      <tbody>
+        {filas.map((f) => (
+          <tr class="border-b border-line/60 last:border-0">
+            <td class="py-1.5 font-semibold">{f.letra}</td>
+            <td class="py-1.5 pr-4">
+              <span class="bar"><i style={`width:${f.recall * 100}%`}></i></span>
+              <span class="tabular text-muted">{pct(f.recall)}</span>
+            </td>
+            <td class="py-1.5 pr-4">
+              <span class="bar"><i style={`width:${f.fondoNuevo * 100}%`}></i></span>
+              <span class="tabular text-muted">{pct(f.fondoNuevo)}</span>
+            </td>
+            <td class="py-1.5 pr-4 tabular text-muted">{pct(f.precision)}</td>
+            <td class="py-1.5 text-muted">
+              {f.confundidaCon.length ? f.confundidaCon.map(([l, n]) => `${l} (${n})`).join(" · ") : "—"}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<style>
+  .bar {
+    display: inline-block;
+    vertical-align: middle;
+    width: 96px;
+    height: 6px;
+    margin-right: 8px;
+    border-radius: 0 3px 3px 0;
+    background: var(--color-line);
+    overflow: hidden;
+  }
+  .bar i { display: block; height: 100%; border-radius: 0 3px 3px 0; background: var(--color-accent); }
+</style>

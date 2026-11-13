@@ -1,0 +1,90 @@
+---
+import Base from "../layouts/Base.astro";
+import Eyebrow from "../components/ui/Eyebrow.astro";
+import Button from "../components/ui/Button.astro";
+import Select from "../components/ui/Select.astro";
+import Stage from "../components/detector/Stage.astro";
+import Result from "../components/detector/Result.astro";
+import Writer from "../components/detector/Writer.astro";
+import Alphabet from "../components/detector/Alphabet.astro";
+import HowItWorks from "../components/HowItWorks.astro";
+---
+<Base title="Detectar" description="Reconoce las 24 letras estáticas del alfabeto manual de la Lengua de Señas Peruana con la cámara, en tiempo real y sin salir del navegador." active="detectar">
+  <section class="flex flex-col gap-5 pt-12 pb-8 sm:pt-16 sm:pb-10">
+    <Eyebrow class="animate-blur-in">Proyecto universitario · IA · alfabeto manual de la LSP · 24 letras · 100 % en tu navegador</Eyebrow>
+    <h1 class="max-w-3xl text-4xl font-semibold tracking-tight text-balance animate-blur-in [animation-delay:80ms] sm:text-6xl sm:leading-[1.02]">
+      Deletrea con las manos.<br />
+      <span class="text-gradient">La cámara lee.</span>
+    </h1>
+    <p class="max-w-xl text-[15px] leading-relaxed text-muted animate-blur-in [animation-delay:160ms] sm:text-lg">
+      Enseña una mano a la cámara y haz una letra. El vídeo nunca sale de tu dispositivo: el detector de manos y el clasificador corren aquí mismo.
+      ¿No te sabes las letras? <a href="/aprender" class="text-fg underline decoration-line-2 underline-offset-4 transition-colors hover:decoration-fg">Apréndelas practicando →</a>
+    </p>
+  </section>
+
+  <section data-detector class="grid gap-4 lg:grid-cols-[1.45fr_1fr]">
+    <div class="flex flex-col gap-3 animate-blur-in [animation-delay:220ms]">
+      <Stage>
+        <Fragment slot="acciones">
+          <div class="flex flex-wrap items-center justify-center gap-2">
+            <Button variant="primary" data-start disabled>Encender cámara</Button>
+            <Button as="label" variant="secondary" class="cursor-pointer">
+              Probar con una foto
+              <input type="file" accept="image/*" data-file class="sr-only" />
+            </Button>
+          </div>
+        </Fragment>
+      </Stage>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="label-mono flex items-center gap-2">
+          cámara
+          <Select name="camera" label="Cámara" options={[{ value: "", label: "predeterminada" }]} />
+        </span>
+        <span class="ml-auto flex gap-2">
+          <Button size="sm" variant="ghost" data-stop hidden>Apagar</Button>
+          <Button as="label" size="sm" variant="ghost" class="cursor-pointer">
+            Foto
+            <input type="file" accept="image/*" data-file class="sr-only" />
+          </Button>
+          <Button size="sm" data-present data-tip="Pantalla completa para proyectar · Esc para salir">
+            <svg class="size-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4" /></svg>
+            <span data-present-label>Modo presentación</span>
+          </Button>
+        </span>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-4 animate-blur-in [animation-delay:300ms]">
+      <Result />
+      <Writer />
+    </div>
+
+    <div class="animate-blur-in [animation-delay:380ms] lg:col-span-2">
+      <Alphabet />
+    </div>
+  </section>
+
+  <HowItWorks />
+
+  <script>
+    import { enPagina } from "../lib/pagina";
+    import { montarDetector } from "../features/detector";
+    enPagina("[data-detector]", montarDetector);
+  </script>
+
+  <style is:global>
+    /* Modo presentación: el detector ocupa la pantalla, letra enorme para proyectar */
+    [data-detector]:fullscreen {
+      background: var(--color-bg);
+      padding: 28px 32px;
+      overflow: auto;
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+      align-content: center;
+      gap: 20px;
+    }
+    [data-detector]:fullscreen [data-letter] { font-size: 180px; }
+    [data-detector]:fullscreen [data-result] > .flex.items-center > .relative { width: 200px; height: 200px; }
+    [data-detector]:fullscreen [data-alphabet] { grid-column: 1 / -1; }
+  </style>
+</Base>

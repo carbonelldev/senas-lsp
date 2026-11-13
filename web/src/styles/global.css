@@ -1,0 +1,289 @@
+@import "tailwindcss";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+
+/* ---------- tokens ---------- */
+@theme {
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --color-bg: #0a0a0a;
+  --color-panel: #111111;
+  --color-panel-2: #171717;
+  --color-line: #232323;
+  --color-line-2: #2f2f2f;
+  --color-fg: #ededed;
+  --color-muted: #a3a3a3;
+  --color-dim: #737373;
+  --color-accent: #8b7cff;
+  --color-accent-2: #22d3ee;
+  --color-ok: #3ddc84;
+  --color-warn: #f5a524;
+  --color-bad: #ff5c5c;
+
+  --radius-panel: 12px;
+  --radius-card: 16px;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: linear(0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.013 55.1%, 1.014 61%, 1.004 80.4%, 1);
+
+  --animate-blur-in: blur-in 0.9s var(--ease-out-expo) both;
+  --animate-letter-in: letter-in 0.45s var(--ease-spring) both;
+  --animate-shimmer: shimmer 2.6s linear infinite;
+  --animate-float: float 14s ease-in-out infinite;
+  --animate-float-2: float 18s ease-in-out -7s infinite reverse;
+  --animate-pulse-ring: pulse-ring 1.6s var(--ease-out-expo) infinite;
+  --animate-marquee: marquee 60s linear infinite;
+  --animate-beam: beam 3s linear infinite;
+  --animate-pop: pop 0.6s var(--ease-spring) both;
+  --animate-draw: draw 0.7s var(--ease-out-expo) 0.1s both;
+  --animate-blink: blink 1.4s steps(2, start) infinite;
+  --animate-scan: scan 2.6s ease-in-out infinite alternate;
+
+  /* Los estados finales usan filter: none (no blur(0)): cualquier filter distinto de none
+     crea un stacking context y atraparia los desplegables/tooltips de dentro. */
+  @keyframes blur-in {
+    from { opacity: 0; filter: blur(10px); transform: translateY(10px); }
+    to { opacity: 1; filter: none; transform: none; }
+  }
+  @keyframes letter-in {
+    from { opacity: 0; filter: blur(12px); transform: scale(0.72) translateY(6px); }
+    to { opacity: 1; filter: none; transform: none; }
+  }
+  @keyframes shimmer {
+    from { background-position: 200% center; }
+    to { background-position: -200% center; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    33% { transform: translate3d(6%, -8%, 0) scale(1.08); }
+    66% { transform: translate3d(-5%, 6%, 0) scale(0.95); }
+  }
+  @keyframes pulse-ring {
+    from { transform: scale(0.9); opacity: 0.9; }
+    to { transform: scale(1.9); opacity: 0; }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes beam {
+    to { --beam-angle: 360deg; }
+  }
+  @keyframes pop {
+    from { transform: scale(0.6); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  @keyframes draw {
+    from { stroke-dashoffset: 60; }
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes blink {
+    to { opacity: 0.25; }
+  }
+  @keyframes scan {
+    from { top: 18%; }
+    to { top: 82%; }
+  }
+}
+
+@property --beam-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* ---------- base ---------- */
+@layer base {
+  html { color-scheme: dark; scroll-behavior: smooth; }
+  body {
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv11", "ss01";
+  }
+  ::selection { background: color-mix(in oklab, var(--color-accent) 45%, transparent); }
+  :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; border-radius: 6px; }
+  button, [role="button"] { cursor: pointer; }
+  canvas, video, img { display: block; }
+  /* barras de scroll finas y oscuras (Firefox + Chromium) */
+  * { scrollbar-width: thin; scrollbar-color: var(--color-line-2) transparent; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--color-line-2); border: 3px solid var(--color-bg); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-dim); }
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  }
+}
+
+/* ---------- utilities ---------- */
+@utility label-mono {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-dim);
+}
+
+@utility panel {
+  background: var(--color-panel);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+}
+
+@utility inset-panel {
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+}
+
+@utility text-gradient {
+  background: linear-gradient(120deg, #fff 0%, #c9c2ff 45%, var(--color-accent-2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility text-shimmer {
+  background: linear-gradient(90deg, var(--color-dim) 0%, var(--color-fg) 50%, var(--color-dim) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: var(--animate-shimmer);
+}
+
+@utility tabular { font-variant-numeric: tabular-nums; }
+
+/* Spotlight: a radial highlight on the hairline that follows the pointer. fx.ts sets --mx/--my. */
+@utility spot {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.55), transparent 62%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.35s;
+    pointer-events: none;
+  }
+  &:hover::before { opacity: 1; }
+}
+
+/* Border beam: a short conic-gradient arc running around the border. */
+@utility beam {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: conic-gradient(from var(--beam-angle), transparent 0 70%, var(--color-accent) 86%, var(--color-accent-2) 94%, transparent 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: var(--animate-beam);
+    pointer-events: none;
+  }
+}
+
+/* Scroll reveal: fx.ts adds .in when the element enters the viewport. */
+@utility reveal {
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(14px);
+  transition: opacity 0.9s var(--ease-out-expo), filter 0.9s var(--ease-out-expo), transform 0.9s var(--ease-out-expo);
+  transition-delay: calc(var(--i, 0) * 70ms);
+  &.in { opacity: 1; filter: none; transform: none; }
+}
+
+@utility dots-bg {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1.2px);
+  background-size: 22px 22px;
+}
+
+/* Crop corner marks (blueprint feel) */
+@utility corners {
+  position: relative;
+  &::before, &::after, & > .corner::before, & > .corner::after {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-color: var(--color-line-2);
+    border-style: solid;
+    pointer-events: none;
+  }
+  &::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+  &::after { top: -1px; right: -1px; border-width: 1px 1px 0 0; }
+  & > .corner::before { bottom: -1px; left: -1px; border-width: 0 0 1px 1px; }
+  & > .corner::after { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+}
+
+/* Mirror the video and its overlay for selfie cameras */
+.mirror video, .mirror canvas.overlay { transform: scaleX(-1); }
+
+/* ---------- componentes (ui/Select, tooltip) ---------- */
+@layer components {
+  [data-select-list] [role="option"] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 8px 6px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.3;
+    color: var(--color-muted);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  [data-select-list] [role="option"]::after {
+    content: "";
+    flex: none;
+    width: 14px;
+    height: 14px;
+    opacity: 0;
+    background: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 8.5 3 3 7-7'/%3E%3C/svg%3E") center / contain no-repeat;
+    transition: opacity 0.15s;
+  }
+  [data-select-list] [role="option"][data-active] { background: rgba(255, 255, 255, 0.06); color: var(--color-fg); }
+  [data-select-list] [role="option"][aria-selected="true"] { color: var(--color-fg); }
+  [data-select-list] [role="option"][aria-selected="true"]::after { opacity: 1; }
+
+  .tooltip {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 60;
+    max-width: 280px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--color-line-2);
+    background: color-mix(in oklab, var(--color-bg) 92%, transparent);
+    backdrop-filter: blur(8px);
+    color: var(--color-fg);
+    font-size: 12.5px;
+    line-height: 1.35;
+    box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+    opacity: 0;
+    translate: 0 4px;
+    transition: opacity 0.18s var(--ease-out-expo), translate 0.18s var(--ease-out-expo);
+  }
+  .tooltip[data-side="bottom"] { translate: 0 -4px; }
+  .tooltip[data-open] { opacity: 1; translate: 0 0; }
+}

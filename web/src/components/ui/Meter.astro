@@ -1,0 +1,9 @@
+---
+// Barra de progreso. El relleno lleva los atributos que se pasen (data-*) para que JS lo encuentre.
+interface Props { tone?: "accent" | "ok"; [k: `data-${string}`]: string | undefined }
+const { tone = "accent", ...rest } = Astro.props;
+const fill = tone === "ok" ? "bg-ok" : "bg-linear-to-r from-accent to-accent-2";
+---
+<div class="h-1.5 w-full overflow-hidden rounded-full bg-line">
+  <div class:list={["h-full w-0 rounded-full transition-[width] duration-200 ease-out", fill]} {...rest}></div>
+</div>

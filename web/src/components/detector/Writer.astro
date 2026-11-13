@@ -1,0 +1,22 @@
+---
+import Eyebrow from "../ui/Eyebrow.astro";
+import Button from "../ui/Button.astro";
+import Meter from "../ui/Meter.astro";
+import Switch from "../ui/Switch.astro";
+---
+<section data-writer class="panel spot flex flex-col gap-4 p-5">
+  <div class="flex items-center justify-between gap-3">
+    <Eyebrow>Deletreo</Eyebrow>
+    <Switch data-auto checked label="escribir al mantener la seña" />
+  </div>
+
+  <Meter tone="ok" data-hold />
+
+  <output data-text aria-label="Texto deletreado" class="block min-h-14 rounded-panel border border-line bg-panel-2 px-4 py-3 text-2xl font-medium tracking-[0.14em] break-words empty:before:text-sm empty:before:font-normal empty:before:tracking-normal empty:before:text-dim empty:before:content-['Mantén_una_letra_un_segundo_y_aparecerá_aquí']"></output>
+
+  <div class="flex flex-wrap gap-2">
+    <Button size="sm" data-space>Espacio</Button>
+    <Button size="sm" data-back>Borrar</Button>
+    <Button size="sm" variant="ghost" data-clear>Limpiar</Button>
+  </div>
+</section>

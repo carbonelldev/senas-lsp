@@ -1,0 +1,37 @@
+---
+import Logo from "./Logo.astro";
+import StatusPill from "./StatusPill.astro";
+
+interface Props { active?: "detectar" | "aprender" | "proyecto"; estado?: boolean }
+const { active, estado = true } = Astro.props;
+const links = [
+  { id: "detectar", href: "/", label: "Detectar" },
+  { id: "aprender", href: "/aprender", label: "Aprender" },
+  { id: "proyecto", href: "/proyecto", label: "Proyecto" },
+] as const;
+---
+<header class="sticky top-0 z-40 border-b border-line/70 bg-bg/70 backdrop-blur-xl">
+  <div class="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
+    <a href="/" class="flex items-center gap-2.5 text-[15px] font-medium tracking-tight text-fg">
+      <Logo />
+      <span>deletrea</span>
+    </a>
+
+    <nav aria-label="Secciones" class="flex items-center gap-0.5 rounded-full border border-line bg-panel p-1">
+      {links.map((l) => (
+        <a
+          href={l.href}
+          aria-current={active === l.id ? "page" : undefined}
+          class="relative rounded-full px-3.5 py-1.5 text-[13px] font-medium text-muted transition-colors hover:text-fg aria-[current=page]:text-fg"
+        >
+          {active === l.id && (
+            <span transition:name="nav-pill" class="absolute inset-0 -z-10 rounded-full border border-line-2 bg-panel-2"></span>
+          )}
+          {l.label}
+        </a>
+      ))}
+    </nav>
+
+    {estado ? <StatusPill /> : <span class="w-8" aria-hidden="true"></span>}
+  </div>
+</header>

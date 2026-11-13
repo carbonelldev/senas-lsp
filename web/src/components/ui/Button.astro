@@ -1,0 +1,23 @@
+---
+import type { HTMLAttributes } from "astro/types";
+
+interface Props extends HTMLAttributes<"a"> {
+  as?: "button" | "a" | "label";
+  variant?: "primary" | "secondary" | "ghost";
+  size?: "sm" | "md" | "lg";
+  disabled?: boolean;
+  type?: "button" | "submit";
+}
+
+const { as: Tag = "button", variant = "secondary", size = "md", class: cls, ...rest } = Astro.props;
+
+const base =
+  "group/btn inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-full font-medium transition-[background-color,color,border-color,transform,box-shadow,opacity] duration-300 ease-out-expo active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent";
+const variants = {
+  primary: "bg-fg text-bg hover:bg-white shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_10px_30px_-12px_rgba(255,255,255,0.45)]",
+  secondary: "border border-line-2 bg-panel text-fg hover:border-dim hover:bg-panel-2",
+  ghost: "text-muted hover:bg-white/5 hover:text-fg",
+};
+const sizes = { sm: "h-8 px-3 text-[13px]", md: "h-10 px-4 text-sm", lg: "h-12 px-6 text-[15px]" };
+---
+<Tag class:list={[base, variants[variant], sizes[size], cls]} {...rest}><slot /></Tag>

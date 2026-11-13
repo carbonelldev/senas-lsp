@@ -1,0 +1,72 @@
+---
+// Marco de camara: video + overlay de puntos + barra superior + estado "esperando camara"
+// con un esqueleto que cambia de letra. Los features lo controlan por data-atributos.
+---
+<div data-stage data-cam="off" data-hand="off" class="stage relative rounded-card">
+  <div class="corners pointer-events-none absolute -inset-px z-30 rounded-card"><span class="corner"></span></div>
+
+  <div class="frame relative aspect-4/3 overflow-hidden rounded-card border border-line bg-[#060606]">
+    <div class="label-mono pointer-events-none absolute inset-x-0 top-0 z-20 flex h-10 items-center justify-between bg-linear-to-b from-black/80 to-transparent px-4">
+      <span class="flex items-center gap-2 text-muted">
+        <i data-led class="led size-1.5 rounded-full"></i>
+        <span data-cam-label>cámara apagada</span>
+      </span>
+      <span data-ms class="tabular text-dim">— ms</span>
+    </div>
+
+    <video data-video playsinline muted class="h-full w-full object-cover"></video>
+    <img data-photo alt="" class="photo absolute inset-0 h-full w-full object-contain" />
+    <canvas data-overlay class="overlay absolute inset-0 h-full w-full"></canvas>
+
+    <div data-nohand class="toast label-mono absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full border border-line-2 bg-black/70 px-3 py-2 text-muted backdrop-blur">
+      no veo ninguna mano
+    </div>
+
+    <div data-placeholder class="placeholder absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 pt-8 sm:gap-5">
+      <div class="dots-bg absolute inset-0 opacity-70 [mask-image:radial-gradient(ellipse_60%_60%_at_50%_45%,#000,transparent_75%)]"></div>
+      <div class="relative flex items-center gap-1 sm:gap-3">
+        <canvas data-demo class="size-28 sm:size-44"></canvas>
+        <span data-letter-anim class="inline-block">
+          <span data-demo-letter class="text-gradient text-[56px] font-semibold leading-none tracking-tighter sm:text-[96px]">A</span>
+        </span>
+      </div>
+      <div class="relative">
+        <slot name="acciones" />
+      </div>
+    </div>
+
+    <slot />
+  </div>
+</div>
+
+<style>
+  .led { background: var(--color-dim); box-shadow: 0 0 8px transparent; transition: background 0.3s, box-shadow 0.3s; }
+  [data-cam="on"] .led { background: var(--color-ok); box-shadow: 0 0 8px var(--color-ok); animation: var(--animate-blink); }
+  [data-cam="on"] .placeholder, [data-cam="photo"] .placeholder { display: none; }
+  .photo { display: none; }
+  [data-cam="photo"] .photo { display: block; }
+  [data-cam="photo"] video { display: none; }
+  /* el canvas tiene el tamano del video o de la foto; contain lo encaja igual que la imagen */
+  .overlay { object-fit: contain; }
+  .toast { opacity: 0; transform: translate(-50%, 6px); transition: opacity 0.3s, transform 0.3s var(--ease-out-expo); }
+  [data-cam="on"][data-hand="off"] .toast { opacity: 1; transform: translate(-50%, 0); }
+  /* Haz de luz en el borde mientras hay una mano */
+  .stage::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: conic-gradient(from var(--beam-angle), transparent 0 68%, var(--color-accent) 86%, var(--color-accent-2) 94%, transparent 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: var(--animate-beam);
+    opacity: 0;
+    transition: opacity 0.4s;
+    pointer-events: none;
+  }
+  [data-hand="on"].stage::after { opacity: 1; }
+  .frame { box-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.02) inset; }
+</style>

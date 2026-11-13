@@ -1,0 +1,78 @@
+---
+import Base from "../layouts/Base.astro";
+import Eyebrow from "../components/ui/Eyebrow.astro";
+import Button from "../components/ui/Button.astro";
+import Marquee from "../components/learn/Marquee.astro";
+import Practice from "../components/learn/Practice.astro";
+import LetterCard from "../components/learn/LetterCard.astro";
+import { EN_MOVIMIENTO, LETRAS } from "../data/letras";
+---
+<Base title="Aprender" description="Guía con fotos y esqueleto de cada letra estática del alfabeto manual de la Lengua de Señas Peruana, y práctica con la cámara." active="aprender">
+  <section data-aprender class="space-y-10 pt-12 sm:pt-16">
+    <div class="grid items-center gap-8 lg:grid-cols-[1.1fr_1fr]">
+      <div class="flex flex-col gap-5">
+        <Eyebrow class="animate-blur-in">Guía · alfabeto manual de la LSP</Eyebrow>
+        <h1 class="text-4xl font-semibold tracking-tight text-balance animate-blur-in [animation-delay:80ms] sm:text-6xl sm:leading-[1.02]">
+          Veinticuatro formas <br />
+          <span class="text-gradient">de una mano.</span>
+        </h1>
+        <p class="max-w-xl text-[15px] leading-relaxed text-muted animate-blur-in [animation-delay:160ms] sm:text-lg">
+          Cada letra con dos fotos reales, su esqueleto y cómo se hace. Enciende la cámara y la práctica te dice al instante si la estás haciendo bien.
+        </p>
+        <div class="flex flex-wrap gap-2 animate-blur-in [animation-delay:240ms]">
+          <Button as="a" href="#practica" variant="primary" size="lg">Practicar con la cámara</Button>
+          <Button as="a" href="#letras" size="lg">Ver las letras</Button>
+        </div>
+      </div>
+
+      <div class="panel relative aspect-square max-h-[420px] overflow-hidden animate-blur-in [animation-delay:200ms] lg:justify-self-end lg:w-full">
+        <div class="dots-bg absolute inset-0 opacity-60 [mask-image:radial-gradient(circle_at_center,#000,transparent_75%)]"></div>
+        <canvas data-hero-skel class="absolute inset-0 h-full w-full"></canvas>
+        <div class="label-mono absolute top-4 left-4 flex items-center gap-2"><i class="size-1.5 bg-accent"></i>esqueleto · 21 puntos</div>
+        <span data-letter-anim class="absolute right-5 bottom-3 inline-block">
+          <span data-hero-letter class="text-gradient text-[96px] font-semibold leading-none tracking-tighter">A</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="reveal"><Marquee /></div>
+
+    <Practice />
+
+    <div id="letras" class="scroll-mt-20 space-y-6">
+      <div class="reveal flex flex-wrap items-end justify-between gap-3">
+        <div class="space-y-2">
+          <Eyebrow>Las 24 letras</Eyebrow>
+          <h2 class="text-3xl font-semibold tracking-tight">Fotos, esqueleto y cómo se hace.</h2>
+        </div>
+        <p class="max-w-md text-[13px] leading-relaxed text-muted">
+          Es el alfabeto tal como aparece en las fotos del dataset. Las notas señalan las letras que se parecen entre sí y en qué fijarse para distinguirlas.
+        </p>
+      </div>
+      <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {LETRAS.map((l, i) => <LetterCard letra={l.letra} como={l.como} ojo={l.ojo} />)}
+      </ul>
+    </div>
+
+    <div class="space-y-4">
+      <div class="reveal space-y-2">
+        <Eyebrow>Con movimiento</Eyebrow>
+        <h2 class="text-2xl font-semibold tracking-tight">Tres letras que el detector no ve.</h2>
+      </div>
+      <ul class="grid gap-3 sm:grid-cols-3">
+        {EN_MOVIMIENTO.map((l, i) => (
+          <li class="panel reveal flex items-start gap-4 p-4" style={`--i: ${i}`}>
+            <span class="text-4xl font-semibold leading-none tracking-tight text-dim">{l.letra}</span>
+            <p class="text-[14px] leading-relaxed text-muted">{l.como}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <script>
+    import { enPagina } from "../lib/pagina";
+    import { montarAprender } from "../features/aprender";
+    enPagina("[data-aprender]", montarAprender);
+  </script>
+</Base>

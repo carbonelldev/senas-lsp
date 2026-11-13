@@ -1,0 +1,15 @@
+---
+// Estado del modelo. Lo actualizan features/*.ts con ponerEstado().
+---
+<span id="status" data-state="loading" class="label-mono inline-flex h-8 items-center gap-2 rounded-full border border-line bg-panel px-3 text-muted">
+  <i class="led size-1.5 rounded-full"></i>
+  <span data-text class="hidden sm:inline">cargando modelo</span>
+</span>
+
+<style>
+  .led { background: currentColor; box-shadow: 0 0 8px currentColor; }
+  [data-state="loading"] .led { color: var(--color-accent); animation: var(--animate-blink); }
+  [data-state="ready"] .led { color: var(--color-ok); }
+  [data-state="live"] .led { color: var(--color-ok); animation: var(--animate-blink); }
+  [data-state="error"] .led { color: var(--color-bad); }
+</style>

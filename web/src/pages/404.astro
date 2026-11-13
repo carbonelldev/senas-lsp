@@ -1,0 +1,11 @@
+---
+import Base from "../layouts/Base.astro";
+import Button from "../components/ui/Button.astro";
+---
+<Base title="No encontrado" description="Esta página no existe.">
+  <section class="flex min-h-[60dvh] flex-col items-center justify-center gap-4 text-center">
+    <span class="text-gradient text-[120px] font-semibold leading-none tracking-tighter">404</span>
+    <p class="text-muted">Esa seña no la conozco.</p>
+    <Button as="a" href="/" variant="primary">Volver al detector</Button>
+  </section>
+</Base>

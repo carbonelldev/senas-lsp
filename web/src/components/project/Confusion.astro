@@ -1,0 +1,67 @@
+---
+// Matriz de confusion (validacion cruzada): filas = letra real, columnas = predicha.
+// Un solo tono (acento) de claro a oscuro; los numeros van en tinta, no en el color del dato.
+import Eyebrow from "../ui/Eyebrow.astro";
+import ev from "../../../public/model/evaluacion.json";
+
+const { classes, matriz } = ev;
+const filas = matriz.map((fila, i) => {
+  const total = fila.reduce((a, b) => a + b, 0);
+  return fila.map((n, j) => {
+    const p = total ? n / total : 0;
+    return { n, p, v: Math.sqrt(p), diag: i === j, tip: `${classes[i]} → ${classes[j]}: ${n} de ${total} (${Math.round(p * 100)} %)` };
+  });
+});
+---
+<section class="panel reveal p-5">
+  <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+    <div class="space-y-1">
+      <Eyebrow>Matriz de confusión · validación cruzada</Eyebrow>
+      <p class="text-[13px] text-muted">Filas: letra real. Columnas: letra predicha. Cuanto más claro, mayor proporción de la fila. Pasa el ratón por una celda para ver el detalle.</p>
+    </div>
+    <span class="label-mono">{ev.n} fotos · {(ev.cv10 * 100).toFixed(1).replace(".", ",")} % acierto</span>
+  </div>
+
+  <div class="overflow-x-auto pb-2">
+    <div class="matrix" style={`grid-template-columns: 26px repeat(${classes.length}, minmax(22px, 1fr))`} role="table" aria-label="Matriz de confusión">
+      <span class="label-mono grid place-items-end pr-1 pb-1 text-[10px]" aria-hidden="true">real</span>
+      {classes.map((c) => <span class="label-mono grid place-items-center pb-1 text-[10px]" role="columnheader">{c}</span>)}
+      {filas.map((fila, i) => (
+        <>
+          <span class="label-mono grid place-items-center pr-1 text-[10px]" role="rowheader">{classes[i]}</span>
+          {fila.map((c) => (
+            <span
+              role="cell"
+              class:list={["cell", c.diag && "diag", c.v > 0.55 ? "ink" : "muted"]}
+              style={`--v:${c.v.toFixed(3)}`}
+              data-tip={c.tip}
+              tabindex={c.n ? 0 : undefined}
+              aria-label={c.tip}
+            >{c.n ? c.n : ""}</span>
+          ))}
+        </>
+      ))}
+    </div>
+  </div>
+  <p class="label-mono mt-2 text-[10px]">predicha →</p>
+</section>
+
+<style>
+  .matrix { display: grid; gap: 2px; min-width: 620px; }
+  .cell {
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border-radius: 3px;
+    font: 500 10px/1 var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    background: color-mix(in oklab, var(--color-accent) calc(var(--v) * 100%), var(--color-panel-2));
+    transition: outline-color 0.15s;
+    outline: 2px solid transparent;
+    outline-offset: -2px;
+  }
+  .cell.muted { color: var(--color-muted); }
+  .cell.ink { color: #0a0a0a; }
+  .cell:hover, .cell:focus-visible { outline-color: var(--color-fg); }
+  .cell.diag { box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-fg) 18%, transparent); }
+</style>

@@ -1,0 +1,8 @@
+---
+interface Props { class?: string }
+const { class: cls } = Astro.props;
+---
+<span class:list={["label-mono inline-flex items-center gap-2", cls]}>
+  <i class="size-1.5 bg-accent"></i>
+  <slot />
+</span>

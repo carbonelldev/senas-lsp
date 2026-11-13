@@ -1,0 +1,15 @@
+# entorno y datos generados
+train/.venv/
+train/cache/
+train/base/
+__pycache__/
+
+# informe (datos personales del grupo y borradores)
+informe/
+
+# web
+web/node_modules/
+web/dist/
+web/.astro/
+web/.wrangler/
+web/public/mediapipe/
