@@ -128,7 +128,7 @@ export function montarAprender(root: HTMLElement): Limpieza {
     }
     pararDemo?.();
     pararDemo = null;
-    await ponerModo(modelo.landmarker, "VIDEO");
+    await ponerModo(modelo, "VIDEO");
     camLabel.textContent = `${video.videoWidth}×${video.videoHeight}`;
     startBtn.hidden = true;
     ponerEstado("practicando", "live");

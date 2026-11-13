@@ -3,7 +3,7 @@ import { Camara } from "../lib/camara";
 import { Esqueleto } from "../lib/esqueleto";
 import { moverIndicador, ponerLetra } from "../lib/fx";
 import {
-  analizarVideo, cargar, leerTodas, ordenar, ordenarManos, ponerModo, Suavizador,
+  analizarVideo, cargar, leerTodas, ordenar, ordenarManos, ponerManos, ponerModo, Suavizador,
   type Lectura, type Modelo,
 } from "../lib/mano";
 import { $, $$, bucle, type Limpieza } from "../lib/pagina";
@@ -134,7 +134,7 @@ export function montarDetector(root: HTMLElement): Limpieza {
     }
     pararDemo?.();
     pararDemo = null;
-    await ponerModo(modelo.landmarker, "VIDEO");
+    await ponerModo(modelo, "VIDEO");
     camLabel.textContent = `${video.videoWidth}×${video.videoHeight}`;
     startBtn.hidden = true;
     stopBtn.hidden = false;
@@ -223,12 +223,9 @@ export function montarDetector(root: HTMLElement): Limpieza {
     stage.dataset.cam = "photo";
     stage.classList.remove("mirror");
     camLabel.textContent = `foto · ${foto.naturalWidth}×${foto.naturalHeight}`;
-    await ponerModo(modelo.landmarker, "IMAGE");
+    await ponerModo(modelo, "IMAGE");
     const W = foto.naturalWidth, H = foto.naturalHeight;
-    // el overlay se dibuja a una resolucion decente aunque la foto sea pequena (object-fit: contain lo encaja)
-    const k = Math.max(1, 720 / Math.max(W, H));
-    cam.overlay.width = Math.round(W * k);
-    cam.overlay.height = Math.round(H * k);
+    cam.ponerFoto(W, H);
     for (const pad of [0, 0.25, 0.5]) {
       const src = pad ? conMargen(foto, pad) : foto;
       const res = modelo.landmarker.detect(src);
@@ -253,6 +250,20 @@ export function montarDetector(root: HTMLElement): Limpieza {
   stopBtn.addEventListener("click", apagar);
   camaras.root.addEventListener("change", (e) => encender((e as CustomEvent<{ value: string }>).detail.value || undefined));
   limpiezas.push(() => camaras.destruir());
+
+  // una o dos manos (se recuerda en este navegador)
+  const dosManos = $<HTMLInputElement>(root, "[data-dosmanos]");
+  try {
+    dosManos.checked = localStorage.getItem("senas-dos-manos") !== "no";
+  } catch {}
+  const aplicarManos = () => {
+    try {
+      localStorage.setItem("senas-dos-manos", dosManos.checked ? "si" : "no");
+    } catch {}
+    suavizador.reiniciar();
+    if (modelo) ponerManos(modelo, dosManos.checked ? 2 : 1).catch(console.error);
+  };
+  dosManos.addEventListener("change", aplicarManos);
   for (const input of $$<HTMLInputElement>(root, "[data-file]")) {
     input.addEventListener("change", () => {
       if (input.files?.[0]) leerFoto(input.files[0]);
@@ -287,6 +298,7 @@ export function montarDetector(root: HTMLElement): Limpieza {
   cargar()
     .then((m) => {
       modelo = m;
+      aplicarManos();
       ponerEstado("listo", "ready");
       startBtn.disabled = false;
     })

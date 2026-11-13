@@ -5,7 +5,7 @@
 <div data-stage data-cam="off" data-hand="off" class="stage relative rounded-card">
   <div class="corners pointer-events-none absolute -inset-px z-30 rounded-card"><span class="corner"></span></div>
 
-  <div class="frame relative aspect-4/3 overflow-hidden rounded-card border border-line bg-[#060606]">
+  <div data-frame class="frame relative aspect-4/3 overflow-hidden rounded-card border border-line bg-[#060606]">
     <div class="label-mono pointer-events-none absolute inset-x-0 top-0 z-20 flex h-10 items-center justify-between bg-linear-to-b from-black/80 to-transparent px-4">
       <span class="flex items-center gap-2 text-muted">
         <i data-led class="led size-1.5 rounded-full"></i>
@@ -14,7 +14,7 @@
       <span data-ms class="tabular text-dim">— ms</span>
     </div>
 
-    <video data-video playsinline muted class="h-full w-full object-cover"></video>
+    <video data-video playsinline muted class="h-full w-full object-contain"></video>
     <img data-photo alt="" class="photo absolute inset-0 h-full w-full object-contain" />
     <canvas data-overlay class="overlay absolute inset-0 h-full w-full"></canvas>
 

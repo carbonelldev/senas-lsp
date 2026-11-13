@@ -11,7 +11,7 @@ const velocidades = [
 ];
 const kbd = "rounded border border-line-2 bg-panel-2 px-1.5 py-0.5 font-mono text-[11px] text-muted";
 const consejos = [
-  ["Dos manos", "Se leen las dos; escribe la que hace la letra más clara."],
+  ["Dos manos", "Se leen las dos; escribe la que hace la letra más clara. Si te detecta la cara, desactiva «buscar las dos manos»."],
   ["Letras dobles", "Para LL o RR, baja la mano un momento y repite."],
   ["J, Ñ, Z y tildes", "No se pueden hacer quietas: salen en las sugerencias."],
 ];
@@ -25,6 +25,7 @@ const consejos = [
         <Select name="speed" label="Tiempo para escribir una letra" options={velocidades} value="900" />
       </span>
       <Switch data-autospace checked label="espacio al bajar la mano" />
+      <Switch data-dosmanos checked label="buscar las dos manos" />
     </div>
     <p class="flex flex-wrap items-center gap-x-3 gap-y-2 text-[12.5px] text-dim">
       <span class="flex items-center gap-1.5"><kbd class={kbd}>Espacio</kbd>espacio</span>

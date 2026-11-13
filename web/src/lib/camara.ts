@@ -15,12 +15,30 @@ export class Camara {
   stream: MediaStream | null = null;
   readonly ctx: CanvasRenderingContext2D;
 
+  /** El recuadro que contiene video y overlay: toma la proporcion real de la camara. */
+  private readonly recuadro: HTMLElement;
+
   constructor(
     readonly video: HTMLVideoElement,
     readonly overlay: HTMLCanvasElement,
     readonly marco: HTMLElement,
   ) {
     this.ctx = overlay.getContext("2d")!;
+    this.recuadro = marco.querySelector<HTMLElement>("[data-frame]") ?? marco;
+    // si la camara cambia de resolucion (p. ej. al girar el movil), se reajusta todo
+    video.addEventListener("resize", () => this.abierta && this.ajustarTamano());
+  }
+
+  /**
+   * Video y overlay deben verse con la misma escala y el mismo recorte, o los puntos no caen
+   * sobre la mano. El recuadro toma la proporcion del video y ambos usan object-fit: contain.
+   */
+  private ajustarTamano() {
+    const { videoWidth: w, videoHeight: h } = this.video;
+    if (!w || !h) return;
+    this.recuadro.style.aspectRatio = `${w} / ${h}`;
+    this.overlay.width = w;
+    this.overlay.height = h;
   }
 
   get abierta() {
@@ -39,9 +57,7 @@ export class Camara {
     await this.video.play();
     const ajustes = this.stream.getVideoTracks()[0].getSettings();
     this.marco.classList.toggle("mirror", ajustes.facingMode !== "environment");
-    this.marco.style.aspectRatio = `${this.video.videoWidth} / ${this.video.videoHeight}`;
-    this.overlay.width = this.video.videoWidth;
-    this.overlay.height = this.video.videoHeight;
+    this.ajustarTamano();
     this.marco.dataset.cam = "on";
     return ajustes;
   }
@@ -51,8 +67,17 @@ export class Camara {
     this.stream = null;
     this.video.srcObject = null;
     this.limpiarOverlay();
+    this.recuadro.style.aspectRatio = "";
     this.marco.dataset.cam = "off";
     delete this.marco.dataset.hand;
+  }
+
+  /** Para fotos: el recuadro vuelve a 4:3 y la foto (igual que el overlay) se encaja con contain. */
+  ponerFoto(w: number, h: number) {
+    this.recuadro.style.aspectRatio = "";
+    const k = Math.max(1, 720 / Math.max(w, h)); // dibujar a una resolucion decente aunque la foto sea pequena
+    this.overlay.width = Math.round(w * k);
+    this.overlay.height = Math.round(h * k);
   }
 
   get espejo() {
