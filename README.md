@@ -17,7 +17,8 @@ Nada sale del dispositivo.
 
 \* Entrenar con las fotos de un fondo (`library`) y probar con las del otro (`wall`), y al revés.
 Es la prueba que más se parece a usar otra cámara en otro sitio.
-** Las manos de prueba se giran al azar (±30° en el plano, ±35° de costado, ±25° arriba/abajo) antes de clasificarlas.
+
+\*\* Las manos de prueba se giran al azar (±30° en el plano, ±35° de costado, ±25° arriba/abajo) antes de clasificarlas.
 Es una simulación con los mismos puntos, no fotos nuevas.
 
 ## Estructura
