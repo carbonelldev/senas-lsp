@@ -3,7 +3,7 @@ import { LETRAS } from "../data/letras";
 import { Camara } from "../lib/camara";
 import { Esqueleto } from "../lib/esqueleto";
 import { ponerLetra } from "../lib/fx";
-import { analizarVideo, cargar, cargarMuestras, mejor, ponerModo, suavizar, type Modelo, type Muestras } from "../lib/mano";
+import { analizarVideo, cargar, cargarMuestras, mejor, ponerModo, Suavizador, type Modelo, type Muestras } from "../lib/mano";
 import { $, $$, bucle, type Limpieza } from "../lib/pagina";
 import { guardarAprendidas, leerAprendidas } from "../lib/progreso";
 import { demoMorph } from "./demo";
@@ -44,7 +44,7 @@ export function montarAprender(root: HTMLElement): Limpieza {
 
   let modelo: Modelo | null = null;
   let muestras: Muestras | null = null;
-  let suavizado: Float64Array | null = null;
+  const suavizador = new Suavizador();
   let actual = 0;
   let inicioHold = 0;
   let celebrando = false;
@@ -85,7 +85,7 @@ export function montarAprender(root: HTMLElement): Limpieza {
     posEl.textContent = `${actual + 1} / ${LETRAS.length}`;
     for (const [l, b] of chips) (l === letra ? (b.dataset.current = "") : delete b.dataset.current);
     if (muestras) objetivoSkel.mostrar(muestras[letra]);
-    suavizado = null;
+    suavizador.reiniciar();
     inicioHold = 0;
     feedback(cam.abierta ? `Haz la ${letra}` : "Enciende la cámara para practicar", 0, false);
   }
@@ -140,17 +140,20 @@ export function montarAprender(root: HTMLElement): Limpieza {
   function tick(now: number) {
     if (!modelo || celebrando || !cam.nuevoFotograma()) return;
     const t0 = performance.now();
-    const r = analizarVideo(modelo, video, now);
-    cam.dibujar(r?.lms ?? null);
     const objetivo = LETRAS[actual].letra;
+    const iObj = modelo.meta.classes.indexOf(objetivo);
+    // con dos manos vale cualquiera: cuenta la que mas se parece a la letra pedida
+    const manos = suavizador
+      .actualizar(analizarVideo(modelo, video, now))
+      .sort((a, b) => b.probs[iObj] - a.probs[iObj]);
+    cam.dibujar(manos.map((m) => ({ lms: m.lms })));
+    const r = manos[0];
     if (!r) {
-      suavizado = null;
       inicioHold = 0;
       feedback(`Haz la ${objetivo}`, 0, false);
     } else {
-      suavizado = suavizar(suavizado, r.probs);
-      const pObj = suavizado[modelo.meta.classes.indexOf(objetivo)];
-      const { letter, conf } = mejor(modelo.meta, suavizado);
+      const pObj = r.probs[iObj];
+      const { letter, conf } = mejor(modelo.meta, r.probs);
       if (pObj >= OK_CONF) {
         inicioHold ||= now;
         const t = Math.min(1, (now - inicioHold) / HOLD_MS);

@@ -18,12 +18,13 @@ const peores = [...filas].slice(-3).reverse().map((f) => f.letra).join(", ");
   </div>
 
   <div class="overflow-x-auto">
-    <table class="w-full min-w-[560px] text-[13px]">
+    <table class="w-full min-w-[720px] text-[13px]">
       <thead class="label-mono">
         <tr class="border-b border-line">
           <th class="pb-2 text-left font-normal">letra</th>
           <th class="pb-2 text-left font-normal">validación cruzada</th>
           <th class="pb-2 text-left font-normal">fondo nuevo</th>
+          <th class="pb-2 text-left font-normal">ángulo nuevo</th>
           <th class="pb-2 text-left font-normal">precisión</th>
           <th class="pb-2 text-left font-normal">se confunde con</th>
         </tr>
@@ -40,6 +41,10 @@ const peores = [...filas].slice(-3).reverse().map((f) => f.letra).join(", ");
               <span class="bar"><i style={`width:${f.fondoNuevo * 100}%`}></i></span>
               <span class="tabular text-muted">{pct(f.fondoNuevo)}</span>
             </td>
+            <td class="py-1.5 pr-4">
+              <span class="bar"><i style={`width:${(f.anguloNuevo ?? 0) * 100}%`}></i></span>
+              <span class="tabular text-muted">{pct(f.anguloNuevo ?? 0)}</span>
+            </td>
             <td class="py-1.5 pr-4 tabular text-muted">{pct(f.precision)}</td>
             <td class="py-1.5 text-muted">
               {f.confundidaCon.length ? f.confundidaCon.map(([l, n]) => `${l} (${n})`).join(" · ") : "—"}
@@ -55,7 +60,7 @@ const peores = [...filas].slice(-3).reverse().map((f) => f.letra).join(", ");
   .bar {
     display: inline-block;
     vertical-align: middle;
-    width: 96px;
+    width: 72px;
     height: 6px;
     margin-right: 8px;
     border-radius: 0 3px 3px 0;

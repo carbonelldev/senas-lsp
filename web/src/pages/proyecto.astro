@@ -114,17 +114,17 @@ const secciones = [
     <section id="metodo" class="scroll-mt-20 space-y-6">
       <div class="reveal space-y-2">
         <Eyebrow>Método</Eyebrow>
-        <h2 class="text-3xl font-semibold tracking-tight">Tres intentos, una lección.</h2>
+        <h2 class="text-3xl font-semibold tracking-tight">Cuatro intentos, una lección.</h2>
         <p class="max-w-2xl text-[15px] leading-relaxed text-muted">
-          La misma receta de clasificación (regresión logística) con tres entradas distintas. Lo que cambia los resultados no es el modelo, sino qué se le da a ver.
+          La misma receta de clasificación con cuatro entradas distintas. Lo que cambia los resultados no es el modelo, sino qué se le da a ver.
         </p>
       </div>
-      <ol class="grid gap-4 lg:grid-cols-3">
+      <ol class="grid gap-4 md:grid-cols-2">
         {FASES.map((f, i) => (
-          <li class:list={["panel spot reveal flex flex-col gap-4 p-5", i === 2 && "border-accent/40"]} style={`--i: ${i}`}>
+          <li class:list={["panel spot reveal flex flex-col gap-4 p-5", i === FASES.length - 1 && "border-accent/40"]} style={`--i: ${i}`}>
             <div class="flex items-center justify-between">
-              <span class="label-mono">{f.n} · {i === 2 ? "en uso" : "descartado"}</span>
-              {i === 2 && <span class="size-1.5 rounded-full bg-ok shadow-[0_0_8px_var(--color-ok)]"></span>}
+              <span class="label-mono">{f.n} · {i === FASES.length - 1 ? "en uso" : "descartado"}</span>
+              {i === FASES.length - 1 && <span class="size-1.5 rounded-full bg-ok shadow-[0_0_8px_var(--color-ok)]"></span>}
             </div>
             <h3 class="text-xl font-semibold tracking-tight">{f.titulo}</h3>
             <p class="font-mono text-[12px] leading-relaxed text-accent">{f.entrada}</p>
@@ -149,9 +149,9 @@ const secciones = [
           <canvas data-skeleton="L" class="absolute inset-0 h-full w-full"></canvas>
         </div>
         <div class="space-y-2 text-[14px] leading-relaxed text-muted">
-          <p><strong class="font-medium text-fg">Características (70 números por foto).</strong> Los 21 puntos menos la muñeca, en 3D y normalizados (60 valores), más las 10 distancias entre las puntas de los dedos. Se estandarizan y entran en una regresión logística con regularización L2 (C = 1), igual que en Orange.</p>
-          <p><strong class="font-medium text-fg">Aumento de datos.</strong> Cada mano se rota ±15°, se escala ±10 %, se le añade ruido y se espeja, para que el modelo funcione con la mano izquierda y con la cámara torcida.</p>
-          <p><strong class="font-medium text-fg">Evaluación.</strong> Validación cruzada estratificada de 10 particiones y "fondo nuevo": entrenar con <span class="font-mono">library</span> y probar con <span class="font-mono">wall</span>, y al revés. Esta segunda prueba es la que se parece a usar otra cámara en otro sitio.</p>
+          <p><strong class="font-medium text-fg">Características ({modelo.mean.length} números por foto).</strong> Los 21 puntos menos la muñeca, en 3D y normalizados (60 valores); las 10 distancias entre las puntas de los dedos; la flexión de las 15 articulaciones y la apertura entre dedos vecinos (4), que no cambian al girar la mano; y 6 distancias de la punta del pulgar a la base de los otros dedos, que separan los puños (A, E, M, N, S, T). Se estandarizan y entran en el clasificador.</p>
+          <p><strong class="font-medium text-fg">Aumento de datos.</strong> Cada mano se copia 6 veces girada en 3D (±30° en el plano, ±40° de costado, ±30° arriba/abajo), con escala ±10 % y ruido, y además se espeja. Así el modelo funciona con la mano izquierda y con la cámara en otros ángulos.</p>
+          <p><strong class="font-medium text-fg">Evaluación.</strong> Validación cruzada estratificada de 10 particiones y "fondo nuevo": entrenar con <span class="font-mono">library</span> y probar con <span class="font-mono">wall</span>, y al revés. Esta segunda prueba es la que se parece a usar otra cámara en otro sitio. Y "ángulo nuevo": las manos de prueba se giran al azar (hasta ±35° de costado) antes de clasificarlas. Es una simulación con los mismos puntos, no fotos nuevas.</p>
         </div>
       </div>
     </section>

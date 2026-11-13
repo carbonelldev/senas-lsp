@@ -3,25 +3,30 @@
 Web: https://senas-alfabeto.proultro14.workers.dev
 
 Reconoce las 24 letras estáticas del alfabeto manual de la LSP con la cámara, en el navegador (dataset: "Peruvian sign language alphabet", Kaggle).
-MediaPipe saca los 21 puntos de la mano y una **regresión logística** decide la letra.
+MediaPipe saca los 21 puntos de cada mano (hasta dos a la vez) y una **red neuronal pequeña** decide la letra.
+La letra se escribe al mantenerla; hay sugerencias de palabras, lectura en voz alta y atajos de teclado.
 Nada sale del dispositivo.
 
 ## Resultados
 
-| Método | Validación cruzada (10) | Fondo nuevo* |
-|---|---|---|
-| Píxeles: MobileNetV2 + reg. logística (`train/entrenar.py`) | 99,1 % | 22 % |
-| **Puntos de la mano + reg. logística** (`train/entrenar_puntos.py`) | 90,3 % | **76 %** |
+| Método | Validación cruzada (10) | Fondo nuevo* | Ángulo nuevo** |
+|---|---|---|---|
+| Píxeles: MobileNetV2 + reg. logística (`train/entrenar.py`) | 99,1 % | 22 % | — |
+| Puntos de la mano v1 (coordenadas + distancias) + reg. logística | 90,7 % | 76,0 % | 74,3 % |
+| **Puntos de la mano v2 (+ ángulos de las articulaciones, giros 3D) + red neuronal** | 90,8 % | **76,0 %** | **90,5 %** |
 
 \* Entrenar con las fotos de un fondo (`library`) y probar con las del otro (`wall`), y al revés.
 Es la prueba que más se parece a usar otra cámara en otro sitio.
+** Las manos de prueba se giran al azar (±30° en el plano, ±35° de costado, ±25° arriba/abajo) antes de clasificarlas.
+Es una simulación con los mismos puntos, no fotos nuevas.
 
 ## Estructura
 
 ```
 train/                      scripts de Python (venv en train/.venv)
+  caracteristicas.py        cálculo de características (mismo que web/src/lib/clasificador.ts)
   extraer_puntos.py         fotos -> 21 puntos por mano (cache/puntos.npz)
-  entrenar_puntos.py        compara modelos y exporta el mejor a puntos.json
+  entrenar_puntos.py        compara modelos (CV10, fondo nuevo, ángulo nuevo) y exporta el mejor a puntos.json
   evaluar.py                matriz de confusion y acierto por letra -> evaluacion.json (pagina /proyecto)
   exportar_muestras.py      una mano "ideal" por letra -> muestras.json (esqueletos de la web)
   exportar_prueba.py        casos para comprobar que el clasificador JS == Python
@@ -63,7 +68,7 @@ py -3.12 -m venv .venv
 
 ```sh
 cd web
-npm test        # el clasificador en JS da lo mismo que Python
+npm test        # clasificador JS == Python y simulación del deletreo
 npm run dev     # local
 npm run deploy  # compila y publica en Cloudflare Workers
 ```

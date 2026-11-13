@@ -6,6 +6,7 @@ import Select from "../components/ui/Select.astro";
 import Stage from "../components/detector/Stage.astro";
 import Result from "../components/detector/Result.astro";
 import Writer from "../components/detector/Writer.astro";
+import Ajustes from "../components/detector/Ajustes.astro";
 import Alphabet from "../components/detector/Alphabet.astro";
 import HowItWorks from "../components/HowItWorks.astro";
 ---
@@ -17,12 +18,12 @@ import HowItWorks from "../components/HowItWorks.astro";
       <span class="text-gradient">La cámara lee.</span>
     </h1>
     <p class="max-w-xl text-[15px] leading-relaxed text-muted animate-blur-in [animation-delay:160ms] sm:text-lg">
-      Enseña una mano a la cámara y haz una letra. El vídeo nunca sale de tu dispositivo: el detector de manos y el clasificador corren aquí mismo.
+      Enseña una o las dos manos a la cámara y haz una letra; mantenla y se escribe. Funciona aunque la mano esté inclinada o de costado. El vídeo nunca sale de tu dispositivo: el detector de manos y el clasificador corren aquí mismo.
       ¿No te sabes las letras? <a href="/aprender" class="text-fg underline decoration-line-2 underline-offset-4 transition-colors hover:decoration-fg">Apréndelas practicando →</a>
     </p>
   </section>
 
-  <section data-detector class="grid gap-4 lg:grid-cols-[1.45fr_1fr]">
+  <section data-detector class="grid items-start gap-4 lg:grid-cols-[1.45fr_1fr]">
     <div class="flex flex-col gap-3 animate-blur-in [animation-delay:220ms]">
       <Stage>
         <Fragment slot="acciones">
@@ -55,9 +56,13 @@ import HowItWorks from "../components/HowItWorks.astro";
       </div>
     </div>
 
-    <div class="flex flex-col gap-4 animate-blur-in [animation-delay:300ms]">
+    <div class="flex flex-col gap-4 animate-blur-in [animation-delay:300ms] lg:row-span-2">
       <Result />
       <Writer />
+    </div>
+
+    <div class="animate-blur-in [animation-delay:340ms]">
+      <Ajustes />
     </div>
 
     <div class="animate-blur-in [animation-delay:380ms] lg:col-span-2">

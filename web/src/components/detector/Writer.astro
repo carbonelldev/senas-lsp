@@ -3,20 +3,55 @@ import Eyebrow from "../ui/Eyebrow.astro";
 import Button from "../ui/Button.astro";
 import Meter from "../ui/Meter.astro";
 import Switch from "../ui/Switch.astro";
+
 ---
 <section data-writer class="panel spot flex flex-col gap-4 p-5">
   <div class="flex items-center justify-between gap-3">
     <Eyebrow>Deletreo</Eyebrow>
-    <Switch data-auto checked label="escribir al mantener la seña" />
+    <Switch data-auto checked label="escribir al mantener" />
   </div>
 
   <Meter tone="ok" data-hold />
 
-  <output data-text aria-label="Texto deletreado" class="block min-h-14 rounded-panel border border-line bg-panel-2 px-4 py-3 text-2xl font-medium tracking-[0.14em] break-words empty:before:text-sm empty:before:font-normal empty:before:tracking-normal empty:before:text-dim empty:before:content-['Mantén_una_letra_un_segundo_y_aparecerá_aquí']"></output>
+  <output
+    data-text
+    aria-live="polite"
+    aria-label="Texto deletreado"
+    class="texto block min-h-16 rounded-panel border border-line bg-panel-2 px-4 py-3 text-2xl font-medium tracking-[0.12em] break-words"
+  ><span class="placeholder text-sm font-normal tracking-normal text-dim">Mantén una letra y aparecerá aquí</span></output>
+
+  <div data-sugs class="flex min-h-8 flex-wrap items-center gap-1.5" aria-label="Sugerencias"><span class="label-mono">sugerencias de palabras</span></div>
 
   <div class="flex flex-wrap gap-2">
     <Button size="sm" data-space>Espacio</Button>
     <Button size="sm" data-back>Borrar</Button>
+    <Button size="sm" data-speak data-tip="Leer el texto en voz alta · Enter">
+      <svg class="size-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h2l3-3v10L5 10H3z" /><path d="M11 5.5a3.5 3.5 0 0 1 0 5M12.5 3.5a6 6 0 0 1 0 9" /></svg>
+      Leer
+    </Button>
+    <Button size="sm" data-copy data-tip="Copiar el texto">
+      <svg class="size-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="8.5" height="8.5" rx="1.5" /><path d="M10.5 5V3.5A1.5 1.5 0 0 0 9 2H3.5A1.5 1.5 0 0 0 2 3.5V9a1.5 1.5 0 0 0 1.5 1.5H5" /></svg>
+      <span data-copy-label>Copiar</span>
+    </Button>
     <Button size="sm" variant="ghost" data-clear>Limpiar</Button>
   </div>
+
 </section>
+
+<style>
+  .texto .l { display: inline-block; }
+  .texto .l.nueva { animation: letra-nueva 0.45s var(--ease-spring); color: var(--color-ok); }
+  .texto .caret { display: inline-block; width: 2px; height: 1.05em; margin-left: 2px; vertical-align: -0.12em; background: var(--color-accent); animation: var(--animate-blink); }
+  @keyframes letra-nueva {
+    from { transform: translateY(6px) scale(0.6); opacity: 0; filter: blur(6px); }
+    to { transform: none; opacity: 1; filter: none; }
+  }
+  :global([data-sugs] button) {
+    display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 999px;
+    border: 1px solid var(--color-line-2); background: var(--color-panel-2); color: var(--color-fg);
+    font-size: 13px; font-weight: 500; letter-spacing: 0.04em; transition: border-color 0.2s, background-color 0.2s;
+    animation: var(--animate-blur-in);
+  }
+  :global([data-sugs] button:hover) { border-color: var(--color-accent); background: color-mix(in oklab, var(--color-accent) 12%, var(--color-panel-2)); }
+  :global([data-sugs] button kbd) { font: 500 10px/1 var(--font-mono); color: var(--color-dim); border: 1px solid var(--color-line-2); border-radius: 4px; padding: 2px 4px; }
+</style>

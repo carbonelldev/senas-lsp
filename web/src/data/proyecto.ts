@@ -1,5 +1,13 @@
 // Datos de la memoria del proyecto. Rellena autores/universidad/asignatura para que
 // aparezcan en la cabecera de /proyecto (si se dejan vacíos no se muestran).
+// Las cifras de las fases 03 y 04 se leen de puntos.json (las escribe train/entrenar_puntos.py).
+import modelo from "../../public/model/puntos.json";
+
+const M = modelo.metrics;
+const V1 = modelo.v1; // [cv10, fondo nuevo, mano izquierda, ángulo nuevo] con las características anteriores
+const N_CARACT = modelo.mean.length;
+const MODELO_ES = modelo.model === "Neural Network" ? "red neuronal" : "regresión logística";
+
 export const PROYECTO = {
   titulo: "Reconocimiento de letras estáticas del alfabeto manual de la LSP",
   autores: [] as string[],
@@ -55,11 +63,24 @@ export const FASES = [
     resumen:
       "Se cambió la entrada: en vez de píxeles, la forma de la mano. Los 21 puntos se normalizan (muñeca en el origen, palma = 1) y se añaden las distancias entre las puntas de los dedos. El fondo desaparece del problema.",
     resultados: [
-      { modelo: "Validación cruzada (10)", cv: 0.903 },
-      { modelo: "Fondo nuevo", cv: 0.766 },
-      { modelo: "Mano izquierda (espejo)", cv: 0.76 },
+      { modelo: "Validación cruzada (10)", cv: V1[0] },
+      { modelo: "Fondo nuevo", cv: V1[1] },
+      { modelo: "Ángulo nuevo (simulado)", cv: V1[3] },
     ],
-    leccion: "Menos acierto en la prueba fácil, 3,5 veces más en la difícil. Es el modelo que corre en esta web.",
+    leccion: "Menos acierto en la prueba fácil y mucho más en la del fondo. Pero con la mano girada o de costado fallaba bastante.",
+  },
+  {
+    n: "04",
+    titulo: "Ángulos de los dedos y giros en 3D",
+    entrada: `21 puntos → ${N_CARACT} características (+ flexión de cada articulación) → ${MODELO_ES}`,
+    resumen:
+      "Se añadieron medidas que no cambian al girar la mano: cuánto se dobla cada articulación, cuánto se abren los dedos entre sí y dónde queda el pulgar. Y al entrenar, cada mano se gira en 3D (de costado, inclinada, rotada) para simular cámaras en otros ángulos.",
+    resultados: [
+      { modelo: "Validación cruzada (10)", cv: M.cv10 },
+      { modelo: "Fondo nuevo", cv: M.newBackground },
+      { modelo: "Ángulo nuevo (simulado)", cv: M.newAngle },
+    ],
+    leccion: "La prueba del ángulo gira las manos de prueba hasta 35° de costado: el modelo nunca vio esas posiciones. Es el modelo que corre en esta web.",
   },
 ] as const;
 

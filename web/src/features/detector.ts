@@ -1,18 +1,22 @@
-// Pagina "Detectar": camara -> puntos -> letra, deletreo por mantener la sena y foto suelta.
+// Pagina "Detectar": camara -> puntos (hasta 2 manos) -> letra, deletreo y foto suelta.
 import { Camara } from "../lib/camara";
-import { Escritor } from "../lib/escritor";
 import { Esqueleto } from "../lib/esqueleto";
 import { moverIndicador, ponerLetra } from "../lib/fx";
-import { analizarVideo, cargar, leer, mejor, ordenar, ponerModo, suavizar, type Modelo, type NormalizedLandmark } from "../lib/mano";
+import {
+  analizarVideo, cargar, leerTodas, ordenar, ordenarManos, ponerModo, Suavizador,
+  type Lectura, type Modelo,
+} from "../lib/mano";
 import { $, $$, bucle, type Limpieza } from "../lib/pagina";
 import { Select } from "../lib/ui/select";
+import { montarDeletreo } from "./deletreo";
 import { demoMorph } from "./demo";
 import { ponerEstado } from "./estado";
 
 const MIN_CONF = 0.5; // por debajo, la letra se muestra atenuada
 const HI_CONF = 0.75; // a partir de aqui, brilla
-const WRITE_CONF = 0.6; // para escribir
-const HOLD_MS = 1100;
+const LADO = { der: "derecha", izq: "izquierda" } as const;
+
+type Mano = ReturnType<typeof ordenarManos>[number];
 
 export function montarDetector(root: HTMLElement): Limpieza {
   // ----- elementos -----
@@ -32,28 +36,52 @@ export function montarDetector(root: HTMLElement): Limpieza {
   const confBar = $(result, "[data-conf-bar]");
   const fpsEl = $(result, "[data-fps]");
   const filas = $$(result, "[data-top3] li").map((li) => ({ l: $(li, "[data-l]"), bar: $(li, "[data-bar]"), p: $(li, "[data-p]") }));
+  const otraLado = $(result, "[data-otra-lado]");
+  const otraLetra = $(result, "[data-otra-letra]");
+  const otraConf = $(result, "[data-otra-conf]");
   const visto = new Esqueleto($<HTMLCanvasElement>(result, "[data-seen]"), { margen: 0.14, grosor: 3, radio: 4 });
 
-  const escritor = new Escritor($(root, "[data-text]"), { conf: WRITE_CONF, holdMs: HOLD_MS });
-  const auto = $<HTMLInputElement>(root, "[data-auto]");
-  const holdBar = $(root, "[data-hold]");
+  const deletreo = montarDeletreo(root, {
+    caja: $(result, "[data-ring-box]"),
+    circulo: result.querySelector<SVGCircleElement>("[data-ring]")!,
+  });
 
   const indicador = $(root, "[data-indicator]");
   const celdas = new Map($$(root, "[data-cell]").map((c) => [c.dataset.cell!, c]));
 
   // ----- estado -----
   let modelo: Modelo | null = null;
-  let suavizado: Float64Array | null = null;
+  const suavizador = new Suavizador();
   let avgMs = 0;
   let activa = ""; // letra marcada en el alfabeto
   let pararBucle: Limpieza | null = null;
   let pararDemo: Limpieza | null = demoMorph($(stage, "[data-demo]"), $(stage, "[data-demo-letter]"));
-  const limpiezas: Limpieza[] = [];
+  const limpiezas: Limpieza[] = [() => deletreo.destruir()];
 
   // ----- resultado -----
-  function mostrar(probs: Float64Array) {
+  /** Muestra las manos ya ordenadas (la primera es la que escribe) y las dibuja sobre la imagen. */
+  function mostrarManos(manos: Mano[], dibujar: (m: Mano) => Lectura["lms"] = (m) => m.lms) {
+    cam.dibujar(
+      manos.map((m) => ({
+        lms: dibujar(m),
+        etiqueta: (m.conf >= MIN_CONF ? m.letter : "?") + (manos.length > 1 ? ` · ${LADO[m.lado]}` : ""),
+      })),
+    );
+    result.dataset.manos = String(manos.length);
+    const [p, otra] = manos;
+    if (!p) return mostrarNada();
+    mostrar(p.probs, p.letter, p.conf);
+    visto.espejo = cam.espejo;
+    visto.mostrar(p.p);
+    if (otra) {
+      otraLado.textContent = `mano ${LADO[otra.lado]}`;
+      otraLetra.textContent = otra.conf >= MIN_CONF ? otra.letter : "?";
+      otraConf.textContent = `${Math.round(otra.conf * 100)} %`;
+    }
+  }
+
+  function mostrar(probs: Float64Array, letter: string, conf: number) {
     const orden = ordenar(probs);
-    const { letter, conf } = mejor(modelo!.meta, probs);
     ponerLetra(letterEl, letter);
     result.dataset.conf = conf >= HI_CONF ? "hi" : conf >= MIN_CONF ? "mid" : "low";
     confText.textContent = `${Math.round(conf * 100)} %`;
@@ -65,12 +93,12 @@ export function montarDetector(root: HTMLElement): Limpieza {
       f.p.textContent = `${Math.round(probs[k] * 100)} %`;
     });
     marcar(conf >= MIN_CONF ? letter : "");
-    return { letter, conf };
   }
 
   function mostrarNada() {
     ponerLetra(letterEl, "–");
     result.dataset.conf = "none";
+    result.dataset.manos = "0";
     confText.textContent = "0 %";
     confBar.style.width = "0";
     filas.forEach((f) => {
@@ -78,6 +106,7 @@ export function montarDetector(root: HTMLElement): Limpieza {
       f.bar.style.width = "0";
       f.p.textContent = "0 %";
     });
+    visto.mostrar(null);
     marcar("");
   }
 
@@ -89,15 +118,6 @@ export function montarDetector(root: HTMLElement): Limpieza {
       else delete c.dataset.on;
     }
     moverIndicador(indicador, letra ? celdas.get(letra)! : null);
-  }
-
-  function escribir(letra: string, conf: number, now: number) {
-    if (!auto.checked) {
-      holdBar.style.width = "0";
-      return;
-    }
-    const { progreso } = escritor.tick(letra, conf, now);
-    holdBar.style.width = `${progreso * 100}%`;
   }
 
   // ----- camara -----
@@ -120,7 +140,7 @@ export function montarDetector(root: HTMLElement): Limpieza {
     stopBtn.hidden = false;
     ponerEstado("detectando", "live");
     await listarCamaras();
-    suavizado = null;
+    suavizador.reiniciar();
     pararBucle?.();
     pararBucle = bucle(tick);
   }
@@ -134,8 +154,7 @@ export function montarDetector(root: HTMLElement): Limpieza {
     startBtn.hidden = false;
     stopBtn.hidden = true;
     mostrarNada();
-    visto.mostrar(null);
-    escritor.reiniciar();
+    deletreo.reiniciar();
     if (modelo) ponerEstado("listo", "ready");
     pararDemo ??= demoMorph($(stage, "[data-demo]"), $(stage, "[data-demo-letter]"));
   }
@@ -150,20 +169,10 @@ export function montarDetector(root: HTMLElement): Limpieza {
   function tick(now: number) {
     if (!modelo || !cam.nuevoFotograma()) return;
     const t0 = performance.now();
-    const r = analizarVideo(modelo, video, now);
-    cam.dibujar(r?.lms ?? null);
-    if (r) {
-      suavizado = suavizar(suavizado, r.probs);
-      const { letter, conf } = mostrar(suavizado);
-      escribir(letter, conf, now);
-      visto.espejo = cam.espejo;
-      visto.mostrar(r.p);
-    } else {
-      suavizado = null;
-      mostrarNada();
-      escribir("", 0, now);
-      visto.mostrar(null);
-    }
+    const manos = ordenarManos(modelo.meta, suavizador.actualizar(analizarVideo(modelo, video, now)));
+    mostrarManos(manos);
+    if (manos[0]) deletreo.tick(manos[0].letter, manos[0].conf, now);
+    else deletreo.sinMano(now);
     const ms = performance.now() - t0;
     avgMs = avgMs ? 0.9 * avgMs + 0.1 * ms : ms;
     msEl.textContent = `${Math.round(avgMs)} ms`;
@@ -197,45 +206,46 @@ export function montarDetector(root: HTMLElement): Limpieza {
     if (!modelo) return;
     apagar();
     quitarFoto();
+    // se espera al evento load (decode() puede fallar o quedarse colgado con la pestaña en segundo plano)
+    const cargada = new Promise<void>((ok, mal) => {
+      foto.onload = () => ok();
+      foto.onerror = () => mal(new Error("No se pudo abrir la imagen"));
+    });
     foto.src = URL.createObjectURL(file);
-    await foto.decode();
+    try {
+      await cargada;
+    } catch {
+      fpsEl.textContent = "no se pudo abrir la imagen";
+      return;
+    }
     pararDemo?.();
     pararDemo = null;
     stage.dataset.cam = "photo";
     stage.classList.remove("mirror");
     camLabel.textContent = `foto · ${foto.naturalWidth}×${foto.naturalHeight}`;
     await ponerModo(modelo.landmarker, "IMAGE");
-    let hallado: { lms: NormalizedLandmark[]; w: number; h: number; b: number } | null = null;
+    const W = foto.naturalWidth, H = foto.naturalHeight;
+    // el overlay se dibuja a una resolucion decente aunque la foto sea pequena (object-fit: contain lo encaja)
+    const k = Math.max(1, 720 / Math.max(W, H));
+    cam.overlay.width = Math.round(W * k);
+    cam.overlay.height = Math.round(H * k);
     for (const pad of [0, 0.25, 0.5]) {
       const src = pad ? conMargen(foto, pad) : foto;
-      const lms = modelo.landmarker.detect(src).landmarks[0];
-      if (lms) {
-        const w = pad ? (src as HTMLCanvasElement).width : foto.naturalWidth;
-        const h = pad ? (src as HTMLCanvasElement).height : foto.naturalHeight;
-        hallado = { lms, w, h, b: pad ? Math.round(Math.max(foto.naturalWidth, foto.naturalHeight) * pad) : 0 };
-        break;
-      }
-    }
-    // el overlay se dibuja a una resolucion decente aunque la foto sea pequena (object-fit: contain lo encaja)
-    const k = Math.max(1, 720 / Math.max(foto.naturalWidth, foto.naturalHeight));
-    cam.overlay.width = Math.round(foto.naturalWidth * k);
-    cam.overlay.height = Math.round(foto.naturalHeight * k);
-    if (!hallado) {
-      cam.dibujar(null);
-      mostrarNada();
-      visto.mostrar(null);
-      fpsEl.textContent = "no se ve ninguna mano en la foto";
+      const res = modelo.landmarker.detect(src);
+      if (!res.landmarks.length) continue;
+      const w = pad ? (src as HTMLCanvasElement).width : W;
+      const h = pad ? (src as HTMLCanvasElement).height : H;
+      const b = pad ? Math.round(Math.max(W, H) * pad) : 0;
+      const manos = ordenarManos(modelo.meta, leerTodas(modelo.meta, res, w, h));
+      // los puntos vienen de la imagen con margen: se reubican sobre la foto original
+      mostrarManos(manos, (m) => m.lms.map((q) => ({ ...q, x: (q.x * w - b) / W, y: (q.y * h - b) / H })));
+      visto.espejo = false;
+      fpsEl.textContent = manos.length > 1 ? "foto · 2 manos" : "foto";
       return;
     }
-    const r = leer(modelo.meta, hallado.lms, hallado.w, hallado.h);
-    // los puntos vienen de la imagen con margen: se reubican sobre la foto original
-    const kx = hallado.w / foto.naturalWidth, ky = hallado.h / foto.naturalHeight;
-    const ox = hallado.b / foto.naturalWidth, oy = hallado.b / foto.naturalHeight;
-    cam.dibujar(hallado.lms.map((q) => ({ ...q, x: q.x * kx - ox, y: q.y * ky - oy })));
-    mostrar(r.probs);
-    visto.espejo = false;
-    visto.mostrar(r.p);
-    fpsEl.textContent = "foto";
+    cam.dibujar([]);
+    mostrarNada();
+    fpsEl.textContent = "no se ve ninguna mano en la foto";
   }
 
   // ----- eventos -----
@@ -249,9 +259,6 @@ export function montarDetector(root: HTMLElement): Limpieza {
       input.value = "";
     });
   }
-  $(root, "[data-space]").addEventListener("click", () => (escritor.texto += " "));
-  $(root, "[data-back]").addEventListener("click", () => (escritor.texto = escritor.texto.slice(0, -1)));
-  $(root, "[data-clear]").addEventListener("click", () => (escritor.texto = ""));
   const onResize = () => activa && moverIndicador(indicador, celdas.get(activa)!);
   addEventListener("resize", onResize);
   limpiezas.push(() => removeEventListener("resize", onResize));

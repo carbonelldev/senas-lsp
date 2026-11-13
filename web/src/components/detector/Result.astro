@@ -1,6 +1,9 @@
 ---
 import Eyebrow from "../ui/Eyebrow.astro";
 import Meter from "../ui/Meter.astro";
+// Anillo de progreso alrededor de la letra: se llena mientras se mantiene la seña.
+const R = 58;
+const C = 2 * Math.PI * R;
 ---
 <section data-result data-conf="none" class="panel spot flex flex-col gap-5 p-5">
   <div class="flex items-center justify-between">
@@ -9,9 +12,18 @@ import Meter from "../ui/Meter.astro";
   </div>
 
   <div class="flex items-center gap-5">
-    <div class="relative grid size-32 shrink-0 place-items-center">
+    <div data-ring-box class="relative grid size-32 shrink-0 place-items-center">
       <div class="glow absolute inset-2 rounded-full bg-accent/40 blur-2xl"></div>
-      <span data-letter class="letter relative block text-[104px] font-semibold leading-none tracking-tighter">–</span>
+      <svg class="absolute inset-0 size-full -rotate-90" viewBox="0 0 128 128" aria-hidden="true">
+        <circle cx="64" cy="64" r={R} fill="none" stroke="var(--color-line)" stroke-width="3" />
+        <circle
+          data-ring
+          cx="64" cy="64" r={R} fill="none" stroke="var(--color-ok)" stroke-width="3.5" stroke-linecap="round"
+          stroke-dasharray={C.toFixed(2)} stroke-dashoffset={C.toFixed(2)} style={`--c:${C.toFixed(2)}`}
+          class="ring"
+        />
+      </svg>
+      <span data-letter class="letter relative block text-[96px] font-semibold leading-none tracking-tighter">–</span>
     </div>
     <div class="min-w-0 flex-1 space-y-3">
       <div class="label-mono flex items-center justify-between">
@@ -31,10 +43,21 @@ import Meter from "../ui/Meter.astro";
     </div>
   </div>
 
+  <div data-otra class="otra inset-panel flex items-center justify-between gap-3 px-3 py-2">
+    <span class="flex items-center gap-2 text-[13px] text-muted">
+      <i class="size-2 rounded-full bg-accent-2 shadow-[0_0_8px_var(--color-accent-2)]"></i>
+      <span data-otra-lado>otra mano</span>
+    </span>
+    <span class="flex items-baseline gap-2">
+      <strong data-otra-letra class="text-xl font-semibold leading-none">–</strong>
+      <span data-otra-conf class="label-mono tabular">0 %</span>
+    </span>
+  </div>
+
   <div class="inset-panel flex items-center gap-4 p-3">
     <canvas data-seen class="size-[72px] shrink-0 rounded-lg bg-black/50" width="144" height="144"></canvas>
     <p class="text-[13px] leading-snug text-muted">
-      Lo que ve el modelo: los 21 puntos de la mano, sin el fondo. Por eso no importa dónde estés ni qué luz haya.
+      Lo que ve el modelo: los 21 puntos de la mano que escribe, sin el fondo. Se reconoce aunque la mano esté inclinada o de costado.
     </p>
   </div>
 </section>
@@ -45,4 +68,9 @@ import Meter from "../ui/Meter.astro";
   [data-conf="mid"] .letter { color: var(--color-muted); }
   [data-conf="hi"] .letter { color: var(--color-fg); text-shadow: 0 0 30px color-mix(in oklab, var(--color-accent) 50%, transparent); }
   [data-conf="hi"] .glow { opacity: 1; }
+  .ring { transition: stroke-dashoffset 0.08s linear; filter: drop-shadow(0 0 6px var(--color-ok)); }
+  [data-ring-box][data-escrita] .ring { animation: ring-ok 0.5s var(--ease-out-expo); }
+  @keyframes ring-ok { from { stroke-width: 8; opacity: 1; } to { stroke-width: 3.5; opacity: 1; } }
+  .otra { display: none; }
+  [data-manos="2"] .otra { display: flex; animation: var(--animate-blur-in); }
 </style>

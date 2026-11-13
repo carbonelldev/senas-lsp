@@ -77,13 +77,50 @@ export class Camara {
     this.ctx.clearRect(0, 0, this.overlay.width, this.overlay.height);
   }
 
-  /** Dibuja los 21 puntos sobre el video. */
-  dibujar(lms: NormalizedLandmark[] | null) {
+  /**
+   * Dibuja los 21 puntos de cada mano sobre el video. La primera es la principal (la que escribe):
+   * va en violeta; la otra en cian y algo mas tenue. Si se pasa `etiqueta`, se rotula junto a la muneca.
+   */
+  dibujar(manos: { lms: NormalizedLandmark[]; etiqueta?: string }[]) {
     const { width: w, height: h } = this.overlay;
+    const ctx = this.ctx;
     this.limpiarOverlay();
-    this.marco.dataset.hand = lms ? "on" : "off";
-    if (!lms) return;
-    dibujarMano(this.ctx, lms.map((q) => ({ x: q.x * w, y: q.y * h })), Math.max(2.5, w / 300), Math.max(3.5, w / 190));
+    this.marco.dataset.hand = manos.length ? "on" : "off";
+    this.marco.dataset.hands = String(manos.length);
+    const grosor = Math.max(2.5, w / 300);
+    const radio = Math.max(3.5, w / 190);
+    manos.forEach((m, i) => {
+      const pts = m.lms.map((q) => ({ x: q.x * w, y: q.y * h }));
+      const principal = i === 0;
+      ctx.globalAlpha = principal ? 1 : 0.75;
+      dibujarMano(ctx, pts, grosor, radio, "rgba(255,255,255,0.9)", principal ? "#8b7cff" : "#22d3ee");
+      ctx.globalAlpha = 1;
+      if (m.etiqueta) this.rotular(pts[0], m.etiqueta, principal ? "#8b7cff" : "#22d3ee", radio);
+    });
+  }
+
+  /** Pastilla de texto bajo la muneca; se contra-espeja para que se lea bien con la vista en espejo. */
+  private rotular(p: { x: number; y: number }, texto: string, color: string, radio: number) {
+    const ctx = this.ctx;
+    const fs = Math.max(13, this.overlay.width / 52);
+    ctx.save();
+    ctx.translate(p.x, p.y + radio * 3 + fs);
+    if (this.espejo) ctx.scale(-1, 1);
+    ctx.font = `600 ${fs}px "Geist Variable", system-ui, sans-serif`;
+    const ancho = ctx.measureText(texto).width + fs * 1.1;
+    const alto = fs * 1.7;
+    ctx.fillStyle = "rgba(10,10,10,0.78)";
+    ctx.strokeStyle = color;
+    ctx.lineWidth = Math.max(1.5, fs / 9);
+    ctx.beginPath();
+    ctx.roundRect(-ancho / 2, -alto / 2, ancho, alto, alto / 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#ededed";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(texto, 0, fs * 0.05);
+    ctx.restore();
   }
 }
 

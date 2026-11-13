@@ -6,7 +6,7 @@ const pct = (v: number) => Math.round(v * 100);
 const stats = [
   { v: modelo.metrics.cv10 * 100, dec: 1, sufijo: " %", label: "validación cruzada", nota: "10 particiones, mismas fotos" },
   { v: modelo.metrics.newBackground * 100, dec: 0, sufijo: " %", label: "con un fondo nuevo", nota: "entrena en uno, prueba en el otro" },
-  { v: modelo.classes.length, dec: 0, sufijo: "", label: "letras", nota: "sin J, Ñ ni Z (van con movimiento)" },
+  { v: (modelo.metrics.newAngle ?? 0) * 100, dec: 0, sufijo: " %", label: "con la mano girada", nota: "hasta 35° de costado (simulado)" },
   { v: modelo.metrics.detected * 100, dec: 0, sufijo: " %", label: "manos detectadas", nota: "de las 1920 fotos del dataset" },
 ];
 const nombres: Record<string, string> = {
@@ -66,7 +66,7 @@ const modelos = Object.entries(modelo.all as Record<string, number[]>).sort((a, 
         ))}
       </div>
       <h3 class="font-medium">Regresión logística</h3>
-      <p class="text-[14px] leading-relaxed text-muted">70 números (coordenadas y distancias entre puntas) → 24 probabilidades. La misma receta que ganó en Orange.</p>
+      <p class="text-[14px] leading-relaxed text-muted">{modelo.mean.length} números (posición de los dedos, cuánto se dobla cada articulación, dónde queda el pulgar) → 24 probabilidades. Hasta dos manos a la vez.</p>
     </li>
   </ol>
 
@@ -88,22 +88,23 @@ const modelos = Object.entries(modelo.all as Record<string, number[]>).sort((a, 
       </div>
       <table class="w-full text-sm">
         <thead class="label-mono">
-          <tr class="border-b border-line"><th class="pb-2 text-left font-normal">modelo</th><th class="pb-2 text-right font-normal">cv10</th><th class="pb-2 text-right font-normal">fondo nuevo</th></tr>
+          <tr class="border-b border-line"><th class="pb-2 text-left font-normal">modelo</th><th class="pb-2 text-right font-normal">cv10</th><th class="pb-2 text-right font-normal">fondo nuevo</th><th class="pb-2 text-right font-normal">ángulo</th></tr>
         </thead>
         <tbody class="tabular">
-          {modelos.map(([nombre, [cv, bg]]) => (
+          {modelos.map(([nombre, [cv, bg, , ang]]) => (
             <tr class:list={["border-b border-line/60 last:border-0", nombre === modelo.model ? "text-fg" : "text-muted"]}>
               <td class="py-2.5">
                 {nombres[nombre] ?? nombre}{nombre === modelo.model && <span class="label-mono ml-2 text-accent">en uso</span>}
               </td>
               <td class="py-2.5 text-right">{pct(cv)} %</td>
               <td class="py-2.5 text-right">{pct(bg)} %</td>
+              <td class="py-2.5 text-right">{pct(ang)} %</td>
             </tr>
           ))}
         </tbody>
       </table>
       <p class="mt-4 text-[12.5px] leading-relaxed text-dim">
-        Las cuatro empatan en "fondo nuevo", que es la prueba que se parece a usar otra cámara. La regresión logística es la más simple, así que es la que corre aquí.
+        "Fondo nuevo" entrena con un fondo y prueba con el otro; "ángulo" gira en 3D las manos de prueba. Son las pruebas que más se parecen a usar otra cámara. Corre aquí el más robusto de los dos que se pueden ejecutar en el navegador.
       </p>
       <a href="/proyecto" class="mt-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-fg underline decoration-line-2 underline-offset-4 transition-colors hover:decoration-fg">
         Memoria completa: dataset, método, matriz de confusión <span aria-hidden="true">→</span>

@@ -8,7 +8,7 @@
     "dev": "npm run copy-wasm && astro dev",
     "build": "npm run copy-wasm && astro build",
     "preview": "astro preview",
-    "test": "node scripts/probar-clasificador.ts",
+    "test": "node scripts/probar-clasificador.ts && node scripts/probar-escritor.ts",
     "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
