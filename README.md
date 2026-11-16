@@ -11,6 +11,7 @@ Nada sale del dispositivo.
 
 | Método | Validación cruzada (10) | Fondo nuevo* | Ángulo nuevo** |
 |---|---|---|---|
+| Orange: Inception v3 + Logistic Regression (`orange/ProyectoIA.ows`) | 96,4 % | 23,3 % | — |
 | Píxeles: MobileNetV2 + reg. logística (`train/entrenar.py`) | 99,1 % | 22 % | — |
 | Puntos de la mano v1 (coordenadas + distancias) + reg. logística | 90,7 % | 76,0 % | 74,3 % |
 | **Puntos de la mano v2 (+ ángulos de las articulaciones, giros 3D) + red neuronal** | 90,8 % | **76,0 %** | **90,5 %** |
