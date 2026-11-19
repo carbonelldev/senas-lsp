@@ -1,0 +1,9 @@
+---
+// Imagen enmarcada con pie de foto.
+interface Props { src: string; alt: string; ancho: number; alto: number; pie?: string; class?: string }
+const { src, alt, ancho, alto, pie, class: cls } = Astro.props;
+---
+<figure class:list={["panel overflow-hidden p-1.5", cls]}>
+  <img src={src} alt={alt} width={ancho} height={alto} loading="lazy" decoding="async" class="h-auto w-full rounded-[10px]" />
+  {pie && <figcaption class="px-2 pt-2.5 pb-1.5 text-[12.5px] leading-snug text-dim">{pie}</figcaption>}
+</figure>

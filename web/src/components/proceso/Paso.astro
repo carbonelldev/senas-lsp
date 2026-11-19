@@ -1,0 +1,25 @@
+---
+// Una "diapositiva" de /proceso: texto a la izquierda y lo visual a la derecha (debajo en móvil).
+interface Props { n: number; etiqueta: string; titulo: string }
+const { n, etiqueta, titulo } = Astro.props;
+const num = String(n).padStart(2, "0");
+---
+<section
+  id={`paso-${n}`}
+  data-slide
+  data-titulo={titulo}
+  class="grid scroll-mt-14 items-center gap-8 border-t border-line/60 py-16 lg:min-h-[calc(100dvh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-14 lg:py-12"
+>
+  <div class="reveal flex flex-col gap-5">
+    <p class="label-mono flex items-center gap-3">
+      <span class="text-accent">{num}</span><span class="h-px w-8 bg-line-2"></span>{etiqueta}
+    </p>
+    <h2 class="text-3xl font-semibold tracking-tight text-balance sm:text-4xl sm:leading-[1.1]">{titulo}</h2>
+    <div class="flex max-w-xl flex-col gap-4 text-[15px] leading-relaxed text-muted sm:text-[17px]">
+      <slot />
+    </div>
+  </div>
+  <div class="reveal min-w-0" style="--i: 1">
+    <slot name="visual" />
+  </div>
+</section>

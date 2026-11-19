@@ -2,17 +2,19 @@
 import Logo from "./Logo.astro";
 import StatusPill from "./StatusPill.astro";
 
-interface Props { active?: "detectar" | "aprender" | "proyecto"; estado?: boolean }
+interface Props { active?: "detectar" | "aprender" | "proceso" | "proyecto"; estado?: boolean }
 const { active, estado = true } = Astro.props;
 const links = [
   { id: "detectar", href: "/", label: "Detectar" },
   { id: "aprender", href: "/aprender", label: "Aprender" },
+  { id: "proceso", href: "/proceso", label: "Proceso" },
   { id: "proyecto", href: "/proyecto", label: "Proyecto" },
 ] as const;
 ---
 <header class="sticky top-0 z-40 border-b border-line/70 bg-bg/70 backdrop-blur-xl">
   <div class="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-    <a href="/" aria-label="deletrea, inicio" class="flex items-center gap-2.5 text-[15px] font-medium tracking-tight text-fg">
+    <!-- en pantallas muy estrechas el logo se oculta para que quepan las cuatro secciones -->
+    <a href="/" aria-label="deletrea, inicio" class="hidden items-center gap-2.5 text-[15px] font-medium tracking-tight text-fg min-[420px]:flex">
       <Logo />
       <span class="hidden sm:inline">deletrea</span>
     </a>
@@ -22,7 +24,7 @@ const links = [
         <a
           href={l.href}
           aria-current={active === l.id ? "page" : undefined}
-          class="relative rounded-full px-3.5 py-1.5 text-[13px] font-medium text-muted transition-colors hover:text-fg aria-[current=page]:text-fg"
+          class="relative rounded-full px-2.5 py-1.5 text-[12.5px] font-medium sm:px-3.5 sm:text-[13px] text-muted transition-colors hover:text-fg aria-[current=page]:text-fg"
         >
           {active === l.id && (
             <span transition:name="nav-pill" class="absolute inset-0 -z-10 rounded-full border border-line-2 bg-panel-2"></span>

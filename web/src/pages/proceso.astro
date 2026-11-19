@@ -1,0 +1,386 @@
+---
+// Qué se hizo después de Orange, contado como una presentación: una diapositiva por paso.
+// Se navega con scroll o con ← → (features/proceso.ts); "Presentar" pone la página a pantalla completa.
+import Base from "../layouts/Base.astro";
+import Eyebrow from "../components/ui/Eyebrow.astro";
+import Button from "../components/ui/Button.astro";
+import Paso from "../components/proceso/Paso.astro";
+import Captura from "../components/proceso/Captura.astro";
+import Termino from "../components/proceso/Termino.astro";
+import { COMMITS, ORANGE, REPO, WEB } from "../data/proceso";
+import ev from "../../public/model/evaluacion.json";
+import modelo from "../../public/model/puntos.json";
+
+// redondeo "de toda la vida" (0,7595 → 76,0 %), igual que en el informe; toFixed daría 75,9
+const redondear = (v: number, dec = 1) => Math.round(Number((v * 100 * 10 ** dec).toFixed(6))) / 10 ** dec; // toFixed(6) evita 759,4999…
+const pct = (v: number, dec = 1) => `${redondear(v, dec).toFixed(dec).replace(".", ",")} %`;
+const M = modelo.metrics;
+const capas = modelo.layers.slice(0, -1).map((l) => l.W[0].length); // [128, 64]
+const N = modelo.mean.length;
+const caracteristicas = [
+  [60, "coordenadas", "20 puntos × (x, y, z), con la muñeca en el centro"],
+  [10, "distancias", "entre las puntas de los dedos"],
+  [15, "ángulos", "cuánto se dobla cada articulación"],
+  [4, "aperturas", "entre dedos vecinos"],
+  [6, "del pulgar", "a la base de los otros dedos (separa los puños)"],
+] as const;
+const modelos = (["Logistic Regression", "SVM", "Neural Network", "kNN"] as const).map((nombre) => ({
+  nombre,
+  cv: modelo.all[nombre][0],
+  fondo: modelo.all[nombre][1],
+  elegido: nombre === modelo.model,
+}));
+const flecha = "shrink-0 text-dim";
+const chip = "rounded-lg border border-line bg-panel-2 px-2.5 py-1.5 text-[12.5px] leading-tight text-fg";
+---
+<Base title="Proceso" description="Qué se hizo después de Orange, paso a paso: la prueba del fondo, MediaPipe, el entrenamiento en Python y cómo se construyó la página." active="proceso" estado={false}>
+  <div data-proceso>
+
+    <!-- 00 · portada -->
+    <section id="paso-0" data-slide data-titulo="Inicio" class="grid scroll-mt-14 items-center gap-10 pt-12 pb-16 lg:min-h-[calc(100dvh-3.5rem)] lg:grid-cols-[1.1fr_1fr] lg:py-10">
+      <div class="flex flex-col gap-6">
+        <Eyebrow class="animate-blur-in">Proceso · después de Orange</Eyebrow>
+        <h1 class="text-4xl font-semibold tracking-tight text-balance animate-blur-in [animation-delay:80ms] sm:text-6xl sm:leading-[1.02]">
+          De un 96 % que engañaba a una web que <span class="text-gradient">sí mira la mano</span>.
+        </h1>
+        <p class="max-w-xl text-[15px] leading-relaxed text-muted animate-blur-in [animation-delay:160ms] sm:text-lg">
+          Qué pasó después de Orange, paso a paso: la prueba que falló, por qué falló, la herramienta que usamos y cómo se construyó esta página.
+        </p>
+        <div class="flex flex-wrap items-center gap-3 animate-blur-in [animation-delay:240ms]">
+          <Button as="a" href="#paso-1" variant="primary" size="lg">Empezar</Button>
+          <Button size="lg" data-presentar>
+            <svg viewBox="0 0 16 16" class="size-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4" /></svg>
+            <span data-presentar-texto>Presentar</span>
+          </Button>
+        </div>
+        <p class="label-mono animate-blur-in [animation-delay:300ms]">← → para avanzar · Esc para salir</p>
+      </div>
+      <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_auto] items-center gap-2 animate-blur-in [animation-delay:200ms] sm:gap-3">
+        <figure class="panel p-1.5">
+          <img src="/proceso/foto_wall.jpg" alt="Foto de una mano haciendo la letra Y" width="480" height="480" class="aspect-square w-full rounded-[10px]" />
+          <figcaption class="label-mono px-1 pt-2.5 pb-1">la foto</figcaption>
+        </figure>
+        <span class={flecha}>→</span>
+        <figure class="panel p-1.5">
+          <img src="/proceso/puntos_wall.jpg" alt="La misma foto con los 21 puntos de la mano marcados" width="480" height="480" class="aspect-square w-full rounded-[10px]" />
+          <figcaption class="label-mono px-1 pt-2.5 pb-1">21 puntos</figcaption>
+        </figure>
+        <span class={flecha}>→</span>
+        <div class="panel grid aspect-square w-16 place-items-center sm:w-24">
+          <span class="text-gradient text-4xl font-semibold sm:text-6xl">Y</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 01 · Orange -->
+    <Paso n={1} etiqueta="Punto de partida" titulo="En Orange todo parecía resuelto">
+      <p>Cada foto se convirtió en 2048 números con Inception v3 y se compararon cuatro modelos en Test and Score.</p>
+      <p><strong class="font-medium text-fg">Logistic Regression acertó el {pct(ORANGE.cv)}</strong> de las fotos en cross-validation de 10 folds.</p>
+      <div slot="visual" class="relative pb-10 sm:pr-10">
+        <Captura src="/proceso/orange_workflow.png" alt="Workflow del proyecto en Orange" ancho={821} alto={570} class="w-[82%] opacity-70" />
+        <Captura
+          src="/proceso/orange_test_score.png"
+          alt="Test and Score en Orange: Logistic Regression con CA 0,964"
+          ancho={768}
+          alto={530}
+          pie="Test and Score · cross-validation de 10 folds"
+          class="absolute right-0 bottom-0 w-[78%] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.9)]"
+        />
+      </div>
+    </Paso>
+
+    <!-- 02 · la prueba del fondo -->
+    <Paso n={2} etiqueta="La prueba" titulo="Entrenar con un fondo y probar con el otro">
+      <p>Las 1920 fotos tienen solo dos fondos: una biblioteca y una pared. En Test and Score usamos <span class="text-fg">Cross validation by feature</span> con la columna <span class="font-mono text-[0.92em] text-fg">background</span>: el modelo aprende con un fondo y se evalúa con el otro.</p>
+      <p>Es lo más parecido a usar la cámara en otro lugar.</p>
+      <div slot="visual" class="flex flex-col gap-4">
+        <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <div class="panel flex flex-col gap-1 p-5">
+            <span class="label-mono">mismos fondos</span>
+            <span class="text-4xl font-medium tracking-tight tabular sm:text-6xl" data-count={redondear(ORANGE.cv)} data-decimals="1" data-suffix=" %">0</span>
+          </div>
+          <span class={flecha}>→</span>
+          <div class="panel flex flex-col gap-1 border-bad/40 p-5">
+            <span class="label-mono">otro fondo</span>
+            <span class="text-4xl font-medium tracking-tight text-bad tabular sm:text-6xl" data-count={redondear(ORANGE.fondo)} data-decimals="1" data-suffix=" %">0</span>
+          </div>
+        </div>
+        <p class="text-center text-[13px] text-dim">Si eligiera la letra al azar entre 24, acertaría cerca del 4 %.</p>
+        <Captura src="/proceso/orange_fondo.png" alt="Test and Score con Cross validation by feature: Logistic Regression con CA 0,233" ancho={776} alto={541} pie="Cross validation by feature (background): los cuatro modelos se caen" />
+      </div>
+    </Paso>
+
+    <!-- 03 · diagnóstico -->
+    <Paso n={3} etiqueta="Qué pasó" titulo="El modelo había aprendido el fondo, no la mano">
+      <p>Para el modelo, estas dos fotos de la misma letra son muy distintas: cambian los colores, la luz y lo que hay detrás. En la cross-validation no se notaba, porque las fotos de prueba tenían los mismos fondos.</p>
+      <Termino termino="Aprendizaje por atajos" ingles="shortcut learning">
+        El modelo se queda con una pista fácil que funciona en los datos de entrenamiento (el fondo) en vez de aprender lo que de verdad importa (la forma de la mano). Solo se descubre probando con datos distintos.
+      </Termino>
+      <div slot="visual" class="grid grid-cols-2 gap-3">
+        <Captura src="/proceso/foto_library.jpg" alt="Letra Y con fondo de biblioteca" ancho={480} alto={480} pie="Letra Y · fondo biblioteca" />
+        <Captura src="/proceso/foto_wall.jpg" alt="Letra Y con fondo de pared" ancho={480} alto={480} pie="Letra Y · fondo pared" />
+      </div>
+    </Paso>
+
+    <!-- 04 · decisión -->
+    <Paso n={4} etiqueta="La decisión" titulo="No desistimos: cambiamos lo que mira el modelo">
+      <p>El modelo de Orange no servía para usarlo con una cámara, así que quedó como punto de partida.</p>
+      <p>En vez de darle la foto entera, le damos <strong class="font-medium text-fg">solo la forma de la mano</strong>. Si no ve el fondo, no lo puede usar de atajo.</p>
+      <div slot="visual" class="panel flex flex-col gap-5 p-5">
+        <div class="flex flex-col gap-2.5">
+          <span class="label-mono text-bad">antes · Orange</span>
+          <div class="flex flex-wrap items-center gap-2">
+            <img src="/proceso/foto_library.jpg" alt="" width="480" height="480" class="size-12 rounded-lg border border-line" />
+            <span class={flecha}>→</span><span class={chip}>Inception v3</span>
+            <span class={flecha}>→</span><span class={chip}>2048 números<br /><span class="text-dim">mano + fondo + luz</span></span>
+            <span class={flecha}>→</span><span class={chip}>modelo</span>
+            <span class="ml-auto font-mono text-[15px] text-bad">{pct(ORANGE.fondo)}</span>
+          </div>
+        </div>
+        <div class="h-px bg-line"></div>
+        <div class="flex flex-col gap-2.5">
+          <span class="label-mono text-ok">después · la web</span>
+          <div class="flex flex-wrap items-center gap-2">
+            <img src="/proceso/puntos_library.jpg" alt="" width="480" height="480" class="size-12 rounded-lg border border-line" />
+            <span class={flecha}>→</span><span class={chip}>MediaPipe</span>
+            <span class={flecha}>→</span><span class={chip}>21 puntos<br /><span class="text-dim">solo la mano</span></span>
+            <span class={flecha}>→</span><span class={chip}>modelo</span>
+            <span class="ml-auto font-mono text-[15px] text-ok">{pct(M.newBackground)}</span>
+          </div>
+        </div>
+        <p class="text-[12.5px] text-dim">Acierto con el otro fondo.</p>
+      </div>
+    </Paso>
+
+    <!-- 05 · MediaPipe -->
+    <Paso n={5} etiqueta="La herramienta" titulo="MediaPipe Hand Landmarker, de Google">
+      <p>Es un modelo ya entrenado que encuentra la mano en una imagen y marca <strong class="font-medium text-fg">21 puntos</strong>: la muñeca, los nudillos, las articulaciones y las puntas de los dedos, cada uno con coordenadas x, y, z.</p>
+      <ol class="flex flex-col gap-2.5 text-[14.5px]">
+        {[
+          "Un primer modelo busca la palma en la imagen y la encierra en un recuadro.",
+          "Un segundo modelo ubica los 21 puntos dentro de ese recuadro.",
+          "En video, sigue la mano de un cuadro al siguiente sin volver a buscarla.",
+        ].map((t, i) => (
+          <li class="flex gap-3"><span class="grid size-6 shrink-0 place-items-center rounded-full border border-line-2 font-mono text-[11px] text-fg">{i + 1}</span><span>{t}</span></li>
+        ))}
+      </ol>
+      <p class="text-[14px] text-dim">No lo entrenamos nosotros: lo usamos tal cual, en Python para las fotos y en el navegador para la cámara.</p>
+      <div slot="visual" class="flex flex-col gap-3">
+        <div class="grid grid-cols-2 gap-3">
+          <Captura src="/proceso/puntos_library.jpg" alt="Los 21 puntos de la mano sobre la foto con fondo de biblioteca" ancho={480} alto={480} pie="fondo biblioteca" />
+          <Captura src="/proceso/puntos_wall.jpg" alt="Los 21 puntos de la mano sobre la foto con fondo de pared" ancho={480} alto={480} pie="fondo pared" />
+        </div>
+        <p class="text-center text-[13px] text-dim">Distinto fondo, la misma forma: eso es lo que ahora ve el modelo.</p>
+      </div>
+    </Paso>
+
+    <!-- 06 · características -->
+    <Paso n={6} etiqueta="De puntos a números" titulo={`La forma de la mano en ${N} números`}>
+      <p>Antes de entrenar, los puntos se acomodan: la muñeca va al centro y el tamaño de la palma vale 1. Así da igual en qué parte de la imagen esté la mano o qué tan cerca esté de la cámara.</p>
+      <p>Después se agregan medidas de la forma, como distancias y ángulos entre los dedos.</p>
+      <div slot="visual" class="grid gap-4 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)]">
+        <div class="inset-panel dots-bg relative aspect-square w-full overflow-hidden">
+          <canvas data-skeleton="Y" class="absolute inset-0 h-full w-full"></canvas>
+          <span class="label-mono absolute top-3 left-3">letra Y · normalizada</span>
+        </div>
+        <ul class="flex flex-col gap-2">
+          {caracteristicas.map(([n, t, d]) => (
+            <li class="panel flex items-center gap-3 px-3.5 py-2.5">
+              <span class="w-9 shrink-0 text-right font-mono text-xl text-fg tabular">{n}</span>
+              <span class="text-[13px] leading-snug"><span class="font-medium text-fg">{t}</span><br /><span class="text-dim">{d}</span></span>
+            </li>
+          ))}
+          <li class="flex items-center gap-3 px-3.5 pt-1">
+            <span class="w-9 shrink-0 text-right font-mono text-xl text-accent tabular">{N}</span>
+            <span class="label-mono">en total, por cada foto</span>
+          </li>
+        </ul>
+      </div>
+    </Paso>
+
+    <!-- 07 · entrenar -->
+    <Paso n={7} etiqueta="Entrenar y comparar" titulo="Los mismos cuatro modelos, ahora en Python">
+      <p>Con la librería scikit-learn probamos los mismos modelos y las mismas pruebas que en Orange, con las {ev.n} fotos en las que MediaPipe encontró la mano ({pct(M.detected, 0)}).</p>
+      <p>Elegimos la <strong class="font-medium text-fg">Neural Network</strong> (dos capas de {capas.join(" y ")} neuronas). SVM quedó un poco mejor, pero para correr en el navegador tendría que guardar muchos ejemplos de entrenamiento; la red acierta casi lo mismo y pesa menos de medio megabyte.</p>
+      <div slot="visual" class="panel flex flex-col gap-4 p-5">
+        <div class="flex items-center gap-4 text-[12px] text-dim">
+          <span class="flex items-center gap-1.5"><i class="size-2 rounded-full bg-accent/50"></i>cross-validation</span>
+          <span class="flex items-center gap-1.5"><i class="size-2 rounded-full bg-ok"></i>otro fondo</span>
+        </div>
+        {modelos.map((m) => (
+          <div class:list={["flex flex-col gap-1.5 rounded-xl p-2.5", m.elegido && "bg-white/[0.03] ring-1 ring-accent/40"]}>
+            <div class="flex items-center justify-between text-[13.5px]">
+              <span class="font-medium text-fg">{m.nombre}</span>
+              {m.elegido && <span class="label-mono text-accent">en uso</span>}
+            </div>
+            {[["bg-accent/50", m.cv], ["bg-ok", m.fondo]].map(([color, v]) => (
+              <div class="flex items-center gap-3">
+                <div class="h-2 flex-1 overflow-hidden rounded-full bg-line"><div class:list={["h-full rounded-full", color]} style={`width: ${(v as number) * 100}%`}></div></div>
+                <span class="w-14 text-right font-mono text-[12.5px] text-muted tabular">{pct(v as number)}</span>
+              </div>
+            ))}
+          </div>
+        ))}
+        <div class="flex items-center gap-3 border-t border-line pt-4 text-[13px]">
+          <span class="text-muted">Orange, otro fondo</span>
+          <div class="h-2 flex-1 overflow-hidden rounded-full bg-line"><div class="h-full rounded-full bg-bad" style={`width: ${ORANGE.fondo * 100}%`}></div></div>
+          <span class="w-14 text-right font-mono text-[12.5px] text-bad tabular">{pct(ORANGE.fondo)}</span>
+        </div>
+      </div>
+    </Paso>
+
+    <!-- 08 · robustez -->
+    <Paso n={8} etiqueta="Para la vida real" titulo="Mano girada, la otra mano y dos manos">
+      <p>Al entrenar, cada mano se copia girada en 3D (de costado, inclinada, rotada) y también espejada, como si fuera la otra mano. Así reconoce la seña aunque la cámara esté en otro ángulo.</p>
+      <Termino termino="Aumento de datos" ingles="data augmentation" etiqueta="cómo se llama">
+        Crear ejemplos nuevos a partir de los que ya hay, transformándolos (girándolos, espejándolos), para que el modelo aprenda a reconocer la seña en más situaciones.
+      </Termino>
+      <div slot="visual" class="flex flex-col gap-4">
+        <div class="grid grid-cols-4 gap-2">
+          {[["original", 0, false], ["girada −30°", -30, false], ["girada +30°", 30, false], ["espejada", 0, true]].map(([t, rot, esp]) => (
+            <figure class="inset-panel dots-bg flex flex-col overflow-hidden">
+              <div class="relative aspect-square w-full"><canvas data-mano="Y" data-rot={rot} data-espejo={esp ? "" : undefined} class="absolute inset-0 h-full w-full"></canvas></div>
+              <figcaption class="label-mono px-2 pb-2.5 text-center">{t}</figcaption>
+            </figure>
+          ))}
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="panel flex flex-col gap-1 p-4">
+            <span class="label-mono">mano girada hasta 35°</span>
+            <span class="flex flex-wrap items-baseline gap-x-2 text-[14px] text-muted"><span class="whitespace-nowrap text-dim line-through">{pct(modelo.v1[3])}</span><span class="whitespace-nowrap text-2xl font-medium text-ok tabular sm:text-3xl">→ {pct(M.newAngle)}</span></span>
+          </div>
+          <div class="panel flex flex-col gap-1 p-4">
+            <span class="label-mono">la otra mano</span>
+            <span class="whitespace-nowrap text-2xl font-medium text-ok tabular sm:text-3xl">{pct(M.leftHand)}</span>
+          </div>
+        </div>
+        <ul class="panel flex flex-col gap-2 p-4 text-[13.5px] text-muted">
+          <li class="flex gap-2"><span class="text-accent">·</span>Lee hasta dos manos a la vez.</li>
+          <li class="flex gap-2"><span class="text-accent">·</span>Descarta la cara si el detector la confunde con una mano.</li>
+          <li class="flex gap-2"><span class="text-accent">·</span>Una mano nueva solo cuenta si aparece 3 cuadros seguidos.</li>
+        </ul>
+      </div>
+    </Paso>
+
+    <!-- 09 · la página -->
+    <Paso n={9} etiqueta="La página" titulo="Todo corre en el navegador">
+      <p>La web se hizo con Astro y TypeScript. MediaPipe y la Neural Network funcionan en la computadora de quien la usa: <strong class="font-medium text-fg">la imagen de la cámara nunca se envía a un servidor</strong>.</p>
+      <p>El modelo entrenado en Python se exportó a un archivo, y comprobamos con 71 casos que la web da el mismo resultado que Python.</p>
+      <div slot="visual" class="flex flex-col gap-4">
+        <ol class="grid grid-cols-3 gap-2">
+          {[
+            ["Cámara", "cada fotograma"],
+            ["MediaPipe", "busca la mano"],
+            ["21 puntos", "x, y, z"],
+            [`${N} números`, "forma de la mano"],
+            ["Neural Network", "probabilidad por letra"],
+            ["Letra", "y se escribe"],
+          ].map(([t, d], i, a) => (
+            <li class:list={["inset-panel flex flex-col gap-1 px-3 py-2.5", i === a.length - 1 && "border-accent/50"]}>
+              <span class="flex items-center gap-2 text-[13px] font-medium text-fg">
+                <span class="font-mono text-[10.5px] text-dim">{i + 1}</span>{t}
+              </span>
+              <span class="text-[11.5px] leading-tight text-dim">{d}</span>
+            </li>
+          ))}
+        </ol>
+        <Captura src={WEB.capturaDetector.src} alt="La página reconociendo la letra Y con los puntos de la mano" ancho={WEB.capturaDetector.ancho} alto={WEB.capturaDetector.alto} pie="El detector: puntos de la mano, letra y confianza" />
+      </div>
+    </Paso>
+
+    <!-- 10 · funciones -->
+    <Paso n={10} etiqueta="Qué hace" titulo="Detectar, escribir y aprender">
+      <ul class="flex flex-col gap-3">
+        {[
+          ["Detectar", "Reconoce la letra en vivo con la cámara, con una o dos manos."],
+          ["Escribir", "Manteniendo cada seña un momento se escriben palabras, con sugerencias y lectura en voz alta."],
+          ["Aprender", "Muestra cómo se hace cada letra y te corrige con la cámara mientras practicas."],
+        ].map(([t, d]) => (
+          <li class="flex gap-3"><span class="mt-2.5 size-1.5 shrink-0 rounded-full bg-accent"></span><span><span class="font-medium text-fg">{t}.</span> {d}</span></li>
+        ))}
+      </ul>
+      <div slot="visual" class="grid gap-3">
+        <Captura src={WEB.capturaAprender.src} alt="Página Aprender con la práctica de una letra" ancho={WEB.capturaAprender.ancho} alto={WEB.capturaAprender.alto} pie="Aprender: guía de cada letra y práctica con la cámara" />
+      </div>
+    </Paso>
+
+    <!-- 11 · publicación y código -->
+    <Paso n={11} etiqueta="Publicación y código" titulo="En línea y con todo el código en GitHub">
+      <p>La página está publicada en Cloudflare Workers. El código, los datos y el workflow de Orange están en GitHub, con instrucciones para ejecutarlo.</p>
+      <p class="text-[14px] text-dim">El código se escribió con ayuda de Claude Code (Anthropic), como se declara en el informe.</p>
+      <div slot="visual" class="flex flex-col gap-3">
+        <a href={REPO.url} target="_blank" rel="noopener" class="panel spot flex flex-col gap-3 p-5 transition-colors hover:border-line-2">
+          <span class="flex items-center gap-2 text-[15px]">
+            <svg viewBox="0 0 16 16" class="size-4 text-muted" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4" cy="3.5" r="1.5" /><circle cx="4" cy="12.5" r="1.5" /><circle cx="12" cy="5.5" r="1.5" /><path d="M4 5v6M12 7c0 3-4 2.5-7.2 4.4" /></svg>
+            <span class="text-muted">{REPO.dueno} /</span><span class="font-medium text-fg">{REPO.nombre}</span>
+            <span class="ml-auto text-dim">↗</span>
+          </span>
+          <ul class="grid gap-1.5 font-mono text-[12.5px]">
+            {REPO.carpetas.map(([c, d]) => (
+              <li class="flex gap-3"><span class="w-16 shrink-0 text-accent">{c}</span><span class="font-sans text-muted">{d}</span></li>
+            ))}
+          </ul>
+        </a>
+        <div class="panel p-5">
+          <p class="label-mono mb-4">historial</p>
+          <ol class="relative flex flex-col gap-3.5 border-l border-line pl-5">
+            {COMMITS.map(([fecha, msg]) => (
+              <li class="relative text-[13px] leading-snug">
+                <span class="absolute top-1 -left-[25px] size-2.5 rounded-full border-2 border-bg bg-line-2"></span>
+                <span class="font-mono text-[11.5px] text-dim">{fecha}</span><br /><span class="text-muted">{msg}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <a href={WEB.url} class="inset-panel flex items-center justify-between gap-3 px-4 py-3 font-mono text-[12.5px] text-muted transition-colors hover:text-fg">
+          <span class="flex items-center gap-2"><i class="size-1.5 rounded-full bg-ok shadow-[0_0_8px_var(--color-ok)]"></i>{WEB.url.replace("https://", "")}</span><span>Cloudflare Workers</span>
+        </a>
+      </div>
+    </Paso>
+
+    <!-- 12 · resultado -->
+    <Paso n={12} etiqueta="Resultado" titulo="Del 23 % al 76 % con un fondo nuevo">
+      <p>Cambiar lo que mira el modelo fue más importante que elegir el modelo. Hoy la página reconoce las letras en vivo.</p>
+      <p class="text-[14px] text-dim">Falta probarla con más personas: todas las fotos son de una sola persona y de dos fondos.</p>
+      <div class="flex flex-wrap gap-2 pt-1">
+        <Button as="a" href="/" variant="primary">Probar el detector</Button>
+        <Button as="a" href="/aprender">Aprender las letras</Button>
+        <Button as="a" href="/proyecto" variant="ghost">Ver la memoria</Button>
+      </div>
+      <dl slot="visual" class="panel flex flex-col gap-6 p-6 sm:p-8">
+        {[
+          ["Orange · foto entera · otro fondo", ORANGE.fondo, "text-bad", "bg-bad"],
+          ["Web · puntos de la mano · otro fondo", M.newBackground, "text-ok", "bg-ok"],
+          ["Web · mano girada hasta 35°", M.newAngle, "text-fg", "bg-accent"],
+        ].map(([t, v, texto, barra]) => (
+          <div class="flex flex-col gap-2">
+            <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+              <dt class="label-mono leading-snug">{t}</dt>
+              <dd class:list={["text-4xl font-medium tracking-tight whitespace-nowrap tabular sm:text-5xl", texto]} data-count={redondear(v as number)} data-decimals="1" data-suffix=" %">0</dd>
+            </div>
+            <div class="h-2 overflow-hidden rounded-full bg-line"><div class:list={["h-full rounded-full", barra]} style={`width: ${(v as number) * 100}%`}></div></div>
+          </div>
+        ))}
+      </dl>
+    </Paso>
+
+    <!-- navegación de la presentación -->
+    <nav data-puntos aria-label="Pasos" class="fixed top-1/2 right-4 z-30 hidden -translate-y-1/2 flex-col items-center gap-2.5 xl:flex"></nav>
+    <div class="fixed bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-1 rounded-full border border-line bg-bg/80 p-1 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.9)] backdrop-blur-xl">
+      <button type="button" data-anterior aria-label="Paso anterior" class="grid size-8 place-items-center rounded-full text-muted transition-colors hover:bg-white/5 hover:text-fg disabled:opacity-30">←</button>
+      <span data-contador class="min-w-16 text-center font-mono text-[12px] text-muted tabular">00 / 12</span>
+      <button type="button" data-siguiente aria-label="Paso siguiente" class="grid size-8 place-items-center rounded-full text-muted transition-colors hover:bg-white/5 hover:text-fg disabled:opacity-30">→</button>
+      <span class="mx-1 h-4 w-px bg-line-2"></span>
+      <button type="button" data-presentar data-tip="Pantalla completa · ← → para avanzar · Esc para salir" class="flex h-8 items-center gap-1.5 rounded-full px-3 text-[12.5px] font-medium text-muted transition-colors hover:bg-white/5 hover:text-fg">
+        <svg viewBox="0 0 16 16" class="size-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4" /></svg>
+        <span data-presentar-texto>Presentar</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    import { enPagina } from "../lib/pagina";
+    import { montarProceso } from "../features/proceso";
+    enPagina("[data-proceso]", montarProceso);
+  </script>
+</Base>

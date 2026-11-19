@@ -39,6 +39,7 @@ train/                      scripts de Python (venv en train/.venv)
   exportar_muestras.py      una mano "ideal" por letra -> muestras.json (esqueletos de la web)
   exportar_prueba.py        casos para comprobar que el clasificador JS == Python
   elegir_ejemplos.py        2 fotos claras por letra -> web/public/ejemplos/
+  figuras_proceso.py        la misma letra en los dos fondos, sin y con los 21 puntos -> web/public/proceso/
 web/                        Astro 7 + Tailwind 4, desplegado en Cloudflare Workers
   src/layouts/Base.astro    html, nav, fondo, footer, ClientRouter
   src/components/           ui/ (Button, Eyebrow, Meter, Select, Switch), detector/, learn/, project/, HowItWorks
@@ -53,6 +54,7 @@ web/                        Astro 7 + Tailwind 4, desplegado en Cloudflare Worke
 ```
 
 Paginas: `/` demo con modo presentacion (pantalla completa), `/aprender` guia y practica,
+`/proceso` lo que se hizo despues de Orange, paso a paso y como presentacion (flechas del teclado),
 `/proyecto` memoria (dataset, metodo en 3 fases, matriz de confusion, limitaciones, reproducir).
 
 ## Abrir el modelo en Orange

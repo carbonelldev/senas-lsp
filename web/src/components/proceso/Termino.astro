@@ -1,0 +1,10 @@
+---
+// Recuadro "cómo se llama": un término técnico explicado en una o dos frases.
+interface Props { termino: string; ingles?: string; etiqueta?: string }
+const { termino, ingles, etiqueta = "cómo se llama" } = Astro.props;
+---
+<div class="inset-panel flex flex-col gap-2 border-l-2 border-l-accent p-4 text-[14px] leading-relaxed">
+  <span class="label-mono text-accent">{etiqueta}</span>
+  <p class="text-[15px] font-medium text-fg">{termino}{ingles && <span class="font-normal text-dim"> ({ingles})</span>}</p>
+  <p class="text-muted"><slot /></p>
+</div>

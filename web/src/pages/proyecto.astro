@@ -9,7 +9,9 @@ import { LETRAS } from "../data/letras";
 import ev from "../../public/model/evaluacion.json";
 import modelo from "../../public/model/puntos.json";
 
-const pct = (v: number, dec = 0) => `${(v * 100).toFixed(dec).replace(".", ",")} %`;
+// redondeo "de toda la vida" (0,7595 → 76,0 %), igual que en el informe; toFixed daría 75,9
+const redondear = (v: number, dec = 1) => Math.round(Number((v * 100 * 10 ** dec).toFixed(6))) / 10 ** dec; // toFixed(6) evita 759,4999…
+const pct = (v: number, dec = 0) => `${redondear(v, dec).toFixed(dec).replace(".", ",")} %`;
 const cabecera = [PROYECTO.asignatura, PROYECTO.universidad, PROYECTO.curso].filter(Boolean).join(" · ");
 const secciones = [
   ["resumen", "Resumen"],
@@ -58,19 +60,19 @@ const secciones = [
           <dd class="text-[13px] text-dim">Parecía resuelto.</dd>
         </div>
         <div class="reveal flex flex-col gap-1 bg-panel p-5" style="--i: 1">
-          <dt class="label-mono">píxeles · fondo nuevo</dt>
-          <dd class="text-4xl font-medium tracking-tight text-bad sm:text-5xl" data-count="22.1" data-decimals="1" data-suffix=" %">0</dd>
+          <dt class="label-mono">Orange · fondo nuevo</dt>
+          <dd class="text-4xl font-medium tracking-tight text-bad sm:text-5xl" data-count="23.3" data-decimals="1" data-suffix=" %">0</dd>
           <dd class="text-[13px] text-dim">Aprendía el fondo, no la mano.</dd>
         </div>
         <div class="reveal flex flex-col gap-1 bg-panel p-5" style="--i: 2">
           <dt class="label-mono">puntos de la mano · fondo nuevo</dt>
-          <dd class="text-4xl font-medium tracking-tight text-ok sm:text-5xl" data-count={ev.fondoNuevo * 100} data-decimals="1" data-suffix=" %">0</dd>
+          <dd class="text-4xl font-medium tracking-tight text-ok sm:text-5xl" data-count={redondear(ev.fondoNuevo)} data-decimals="1" data-suffix=" %">0</dd>
           <dd class="text-[13px] text-dim">El modelo que corre aquí.</dd>
         </div>
       </dl>
       <p class="reveal max-w-3xl text-[15px] leading-relaxed text-muted">
         <strong class="font-medium text-fg">Objetivo.</strong> Reconocer en tiempo real la letra que una persona hace con la mano, sin enviar vídeo a ningún servidor.{" "}
-        <strong class="font-medium text-fg">Resultado.</strong> Un modelo pequeño (regresión logística sobre 21 puntos de la mano) con {pct(ev.cv10, 1)} de acierto en validación cruzada y {pct(ev.fondoNuevo, 1)} cuando el fondo es nuevo,
+        <strong class="font-medium text-fg">Resultado.</strong> Una red neuronal pequeña sobre los 21 puntos de la mano con {pct(ev.cv10, 1)} de acierto en validación cruzada y {pct(ev.fondoNuevo, 1)} cuando el fondo es nuevo,
         integrado en una web que detecta, enseña y permite practicar las 24 letras.
       </p>
     </section>
@@ -119,6 +121,9 @@ const secciones = [
           La misma receta de clasificación con cuatro entradas distintas. Lo que cambia los resultados no es el modelo, sino qué se le da a ver.
         </p>
       </div>
+      <p class="reveal">
+        <Button as="a" href="/proceso" size="sm">Ver el proceso paso a paso →</Button>
+      </p>
       <ol class="grid gap-4 md:grid-cols-2">
         {FASES.map((f, i) => (
           <li class:list={["panel spot reveal flex flex-col gap-4 p-5", i === FASES.length - 1 && "border-accent/40"]} style={`--i: ${i}`}>
