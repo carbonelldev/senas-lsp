@@ -42,22 +42,57 @@ export function montarProceso(root: HTMLElement): Limpieza {
     });
   }
 
-  function ir(i: number) {
-    const k = Math.max(0, Math.min(total, i));
-    pasos[k].scrollIntoView({ behavior: "smooth", block: "start" });
-    marcar(k);
+  /** El paso que ocupa la mitad de la pantalla. */
+  function pasoVisible() {
+    const mitad = innerHeight / 2;
+    const i = pasos.findIndex((p) => {
+      const r = p.getBoundingClientRect();
+      return r.top <= mitad && r.bottom > mitad;
+    });
+    return i === -1 ? actual : i;
   }
 
-  // el paso actual es el que ocupa la franja central de la pantalla
-  const io = new IntersectionObserver(
-    (entradas) => {
-      for (const e of entradas) if (e.isIntersecting) marcar(pasos.indexOf(e.target as HTMLElement));
-    },
-    { rootMargin: "-45% 0px -50% 0px" },
-  );
-  pasos.forEach((p) => io.observe(p));
-  limpiezas.push(() => io.disconnect());
-  marcar(0);
+  // Mientras dura un desplazamiento hecho con las flechas, el paso actual es el de destino:
+  // los pasos que se cruzan por el camino no cuentan. Sin esto, al pulsar rápido varias veces
+  // se calculaba el siguiente a partir de un paso intermedio y la página saltaba de un lado a otro.
+  let navegando = false;
+  let finNav = 0;
+  const terminar = () => {
+    navegando = false;
+    clearTimeout(finNav);
+  };
+
+  function ir(i: number) {
+    const k = Math.max(0, Math.min(total, i));
+    navegando = true;
+    marcar(k);
+    const suave = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+    pasos[k].scrollIntoView({ behavior: suave ? "smooth" : "auto", block: "start" });
+    clearTimeout(finNav);
+    finNav = window.setTimeout(terminar, 700); // por si no hay scroll (ya estaba ahí)
+  }
+
+  let cuadro = 0;
+  const onScroll = () => {
+    if (navegando) {
+      // termina cuando el scroll lleva un momento quieto (scrollend no existe en todos los navegadores)
+      clearTimeout(finNav);
+      finNav = window.setTimeout(terminar, 160);
+      return;
+    }
+    cuadro ||= requestAnimationFrame(() => {
+      cuadro = 0;
+      const i = pasoVisible();
+      if (i !== actual) marcar(i);
+    });
+  };
+  addEventListener("scroll", onScroll, { passive: true });
+  limpiezas.push(() => {
+    removeEventListener("scroll", onScroll);
+    cancelAnimationFrame(cuadro);
+    clearTimeout(finNav);
+  });
+  marcar(pasoVisible());
 
   anterior.addEventListener("click", () => ir(actual - 1));
   siguiente.addEventListener("click", () => ir(actual + 1));
